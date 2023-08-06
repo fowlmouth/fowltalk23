@@ -1,0 +1,7 @@
+*.o
+*.a
+*.so
+src/vm/vm
+vm
+src/compiler/compiler
+compiler
