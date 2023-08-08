@@ -1,4 +1,4 @@
-#include "image.h"
+#include "libfowl.h"
 
 
 int main()
