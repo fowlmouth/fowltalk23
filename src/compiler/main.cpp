@@ -4,15 +4,31 @@
 
 #include <iostream>
 
-int main()
+
+
+int main(int argc, const char** argv)
 {
-  std::string my_input = "hello world";
+  bool lexer_debug = false;
 
-  Lexer l(my_input);
-
-  for(auto tk = l.next(); tk.type != Token::tk_eof; tk = l.next())
+  for(int i = 1; i < argc; ++i)
   {
-    std::cout << "token type= " << tk.type << "  string= '" << tk.string << "'" << std::endl;
+    if(!std::strcmp("--debug-lexer", argv[i]))
+    {
+      lexer_debug = true;
+    }
   }
+
+  if(lexer_debug)
+  {
+    std::string my_input = "hello world";
+
+    Lexer l(my_input);
+
+    for(auto tk = l.next(); tk.type != Token::tk_eof; tk = l.next())
+    {
+      std::cout << "token type= " << tk.type << "  string= '" << tk.string << "'" << std::endl;
+    }
+  }
+
   return 0;
 }
