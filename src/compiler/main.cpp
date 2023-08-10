@@ -1,6 +1,6 @@
 #include "libfowl.h"
-
 #include "parser.h"
+#include "cli.h"
 
 #include <iostream>
 
@@ -10,13 +10,11 @@ int main(int argc, const char** argv)
 {
   bool lexer_debug = false;
 
-  for(int i = 1; i < argc; ++i)
-  {
-    if(!std::strcmp("--debug-lexer", argv[i]))
-    {
-      lexer_debug = true;
-    }
-  }
+  CLI cli;
+
+  cli
+    .on("--debug-lexer", [&lexer_debug](){ lexer_debug = true; })
+    .parse(argc, argv);
 
   if(lexer_debug)
   {
