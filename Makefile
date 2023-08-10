@@ -15,7 +15,7 @@ libfowl.so: src/lib/libfowl.so
 src/lib/libfowl.so: $(wildcard src/lib/*.cpp)
 	make -C src/lib
 
-compiler: src/compiler/compiler
+compiler: src/compiler/compiler src/lib/libfowl.so
 	cp src/compiler/compiler ./
 
 src/compiler/compiler: $(wildcard src/compiler/*.cpp)

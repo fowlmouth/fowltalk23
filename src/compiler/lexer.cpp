@@ -71,13 +71,12 @@ Token Lexer::next()
     return token;
   }
 
-  intptr_t int_value = 0;
-
   switch(current())
   {
   case '0': case '1': case '2': case '3': case '4':
   case '5': case '6': case '7': case '8': case '9':
     token.type = Token::tk_integer;
+    token.int_value = 0;
     while(is_digit())
     {
       token.int_value = token.int_value * 10 + (current() - '0');
