@@ -55,6 +55,11 @@ void Lexer::next_char()
 
 Token Lexer::next()
 {
+  if(index >= input.size())
+  {
+    return Token{ .type = Token::tk_eof };
+  }
+
   while(is_whitespace())
   {
     next_char();
@@ -65,7 +70,7 @@ Token Lexer::next()
   token.source_line = line;
   token.source_col = col;
 
-  if (index >= input.size())
+  if(index >= input.size())
   {
     token.type = Token::tk_eof;
     return token;

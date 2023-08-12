@@ -9,6 +9,7 @@ class CLI
   struct Option
   {
     const char* opt;
+    bool value_required;
     std::function< void(std::string_view) > callback;
   };
   std::unordered_map< std::string_view, Option > options;

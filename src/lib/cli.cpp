@@ -2,13 +2,13 @@
 
 CLI& CLI::on(const char* option, std::function< void() > callback)
 {
-  options[option] = { option, [=](std::string_view){ callback(); } };
+  options[option] = { option, false, [=](std::string_view){ callback(); } };
   return *this;
 }
 
 CLI& CLI::on(const char* option, std::function< void(std::string_view) > callback)
 {
-  options[option] = { option, callback };
+  options[option] = { option, true, callback };
   return *this;
 }
 
@@ -28,7 +28,11 @@ void CLI::parse(int argc, const char** argv) const
       std::string_view option(arg);
       if(auto it = options.find(option); it != options.end())
       {
-        if(it->second.callback)
+        if(it->second.value_required)
+        {
+          it->second.callback(argv[++i]);
+        }
+        else
         {
           it->second.callback("");
         }

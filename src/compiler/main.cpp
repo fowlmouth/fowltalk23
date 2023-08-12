@@ -11,9 +11,35 @@
 //  for lseek
 #include <unistd.h>
 
+#include <iostream>
+
+class EventPrinter : public Parser
+{
+  std::ostream& stream;
+
+public:
+  EventPrinter(std::string_view input, std::ostream& stream);
+
+protected:
+  bool accept_integer(intmax_t value) override;
+};
+
+EventPrinter::EventPrinter(std::string_view input, std::ostream& stream)
+: Parser(input), stream(stream)
+{
+}
+
+bool EventPrinter::accept_integer(intmax_t number)
+{
+  stream << "accept_integer number= " << number << std::endl;
+  return true;
+}
+
+
+
 int main(int argc, const char** argv)
 {
-  bool lexer_debug = false;
+  bool lexer_debug = false, parser_debug = false;
   std::string input_path;
   std::string_view input_contents;
 
@@ -22,10 +48,14 @@ int main(int argc, const char** argv)
     .on("--debug-lexer", [&](){
       lexer_debug = true;
     })
+    .on("--debug-parser", [&](){
+      parser_debug = true;
+    })
     .on("--file", [&](std::string_view arg){
       input_path = arg;
     })
     .on("--input", [&](std::string_view arg){
+      std::cout << "input_contents= '" << arg << "'" << std::endl;
       input_contents = arg;
     })
     .on_argument([&](std::string_view arg){
@@ -62,6 +92,12 @@ int main(int argc, const char** argv)
     {
       std::cout << "token type= " << tk.type << "  string= '" << tk.string << "'" << std::endl;
     }
+  }
+
+  if(parser_debug)
+  {
+    EventPrinter p(input_contents, std::cout);
+    p.parse_expression();
   }
 
   if(mmap_data)
