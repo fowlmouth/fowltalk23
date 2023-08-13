@@ -13,6 +13,8 @@
 
 #include <iostream>
 
+
+
 class EventPrinter : public Parser
 {
   std::ostream& stream;
@@ -55,7 +57,6 @@ int main(int argc, const char** argv)
       input_path = arg;
     })
     .on("--input", [&](std::string_view arg){
-      std::cout << "input_contents= '" << arg << "'" << std::endl;
       input_contents = arg;
     })
     .on_argument([&](std::string_view arg){
@@ -78,10 +79,18 @@ int main(int argc, const char** argv)
     fseek(input_file, 0, SEEK_SET);
     mmap_data = mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fileid, 0);
     fclose(input_file);
-    if(mmap_data)
+    if(!mmap_data)
     {
-      input_contents = std::string_view((char*)mmap_data, file_size);
+      std::cerr << "failed to mmap file '" << input_path << '"' << std::endl;
+      return 1;
     }
+    input_contents = std::string_view((char*)mmap_data, file_size);
+  }
+
+  if(input_contents.empty())
+  {
+    std::cerr << "no input" << std::endl;
+    return 1;
   }
 
   if(lexer_debug)
