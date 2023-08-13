@@ -27,12 +27,21 @@ void Parser::report_error(std::string message)
     << " column= " << tok.source_col << std::endl;
 }
 
+#define CHECK_CALLBACK(callback) \
+  do{ \
+    if(!(callback)) \
+    { \
+      return false; \
+    } \
+  }while(0)
+
+
 bool Parser::parse_terminal()
 {
   switch(current_type())
   {
   case Token::Integer:
-    accept_integer(tok.int_value);
+    CHECK_CALLBACK(accept_integer(tok.int_value));
     next();
     return true;
 
@@ -58,7 +67,7 @@ bool Parser::parse_infix()
       Token op = tok;
       next();
       EXPECT(parse_terminal, "terminal");
-      accept_send(op.string, 2);
+      CHECK_CALLBACK(accept_send(op.string, 2));
       return true;
     }
     return true;
