@@ -104,7 +104,7 @@ int main(int argc, const char** argv)
   {
     Lexer l(input_contents);
 
-    for(auto tk = l.next(); tk.type != Token::tk_eof; tk = l.next())
+    for(auto tk = l.next(); tk.type != Token::EndOfFile; tk = l.next())
     {
       std::cout << "token type= " << tk.type << "  line= " << tk.source_line << "  column= " << tk.source_col << "  string= '" << tk.string << "'" << std::endl;
     }

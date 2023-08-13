@@ -31,7 +31,7 @@ bool Parser::parse_terminal()
 {
   switch(current_type())
   {
-  case Token::tk_integer:
+  case Token::Integer:
     accept_integer(tok.int_value);
     next();
     return true;
@@ -53,7 +53,7 @@ bool Parser::parse_infix()
 {
   if(parse_terminal())
   {
-    if(current_type() == Token::tk_operator)
+    if(current_type() == Token::Operator)
     {
       Token op = tok;
       next();

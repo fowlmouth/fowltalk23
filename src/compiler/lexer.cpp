@@ -57,7 +57,7 @@ Token Lexer::next()
 {
   if(index >= input.size())
   {
-    return Token{ .type = Token::tk_eof };
+    return Token{ .type = Token::EndOfFile };
   }
 
   while(is_whitespace())
@@ -72,7 +72,7 @@ Token Lexer::next()
 
   if(index >= input.size())
   {
-    token.type = Token::tk_eof;
+    token.type = Token::EndOfFile;
     return token;
   }
 
@@ -80,7 +80,7 @@ Token Lexer::next()
   {
   case '0': case '1': case '2': case '3': case '4':
   case '5': case '6': case '7': case '8': case '9':
-    token.type = Token::tk_integer;
+    token.type = Token::Integer;
     token.int_value = 0;
     while(is_digit())
     {
@@ -90,14 +90,14 @@ Token Lexer::next()
     break;
 
   case '+': case '-': case '/': case '*':
-    token.type = Token::tk_operator;
+    token.type = Token::Operator;
     next_char();
     break;
 
   default:
     if(is_identifier_start())
     {
-      token.type = Token::tk_identifier;
+      token.type = Token::Identifier;
       while(is_identifier_char())
       {
         next_char();
@@ -105,7 +105,7 @@ Token Lexer::next()
     }
     else
     {
-      token.type = Token::tk_eof;
+      token.type = Token::EndOfFile;
     }
     break;
   }

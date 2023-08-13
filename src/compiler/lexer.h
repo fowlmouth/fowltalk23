@@ -6,13 +6,13 @@ struct Token
 {
   enum Type
   {
-    tk_eof,
-    tk_identifier,
-    tk_operator,
-    tk_integer,
-    tk_string,
+    EndOfFile,
+    Identifier,
+    Operator,
+    Integer,
+    String,
 
-    tk__count
+    __count
   };
 
   Type type;
