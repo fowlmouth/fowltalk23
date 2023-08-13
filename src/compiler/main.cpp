@@ -24,6 +24,7 @@ public:
 
 protected:
   bool accept_integer(intmax_t value) override;
+  bool accept_send(std::string_view selector, int arity) override;
 };
 
 EventPrinter::EventPrinter(std::string_view input, std::ostream& stream)
@@ -37,6 +38,11 @@ bool EventPrinter::accept_integer(intmax_t number)
   return true;
 }
 
+bool EventPrinter::accept_send(std::string_view selector, int arity)
+{
+  stream << "accept_send selector= '" << selector << "'  arity= " << arity << std::endl;
+  return true;
+}
 
 
 int main(int argc, const char** argv)

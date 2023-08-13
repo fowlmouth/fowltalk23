@@ -89,6 +89,11 @@ Token Lexer::next()
     }
     break;
 
+  case '+': case '-': case '/': case '*':
+    token.type = Token::tk_operator;
+    next_char();
+    break;
+
   default:
     if(is_identifier_start())
     {

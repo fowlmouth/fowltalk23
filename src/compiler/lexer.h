@@ -8,6 +8,7 @@ struct Token
   {
     tk_eof,
     tk_identifier,
+    tk_operator,
     tk_integer,
     tk_string,
 
