@@ -1,6 +1,7 @@
 #include "libfowl.h"
 #include "parser.h"
 #include "cli.h"
+#include "method-parser.h"
 
 #include <iostream>
 
@@ -105,7 +106,7 @@ int main(int argc, const char** argv)
 
     for(auto tk = l.next(); tk.type != Token::tk_eof; tk = l.next())
     {
-      std::cout << "token type= " << tk.type << "  string= '" << tk.string << "'" << std::endl;
+      std::cout << "token type= " << tk.type << "  line= " << tk.source_line << "  column= " << tk.source_col << "  string= '" << tk.string << "'" << std::endl;
     }
   }
 
@@ -114,6 +115,10 @@ int main(int argc, const char** argv)
     EventPrinter p(input_contents, std::cout);
     p.parse_expression();
   }
+
+  MethodBuilder method_context;
+  MethodParser parser(input_contents, method_context);
+  parser.parse_expression();
 
   if(mmap_data)
   {
