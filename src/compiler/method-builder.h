@@ -9,6 +9,8 @@
 #include <vector>
 #include <iterator>
 
+int main(int, const char**);
+
 class MethodBuilder
 {
   MethodBuilder* parent_;
@@ -16,6 +18,8 @@ class MethodBuilder
   int stack_size, stack_size_max;
   std::vector< oop > immediates;
   std::vector< vm_instruction_t > instructions;
+
+  friend int main(int, const char**);
 
 protected:
   int push_immediate(oop value);

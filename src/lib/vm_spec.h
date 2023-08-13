@@ -15,3 +15,9 @@ enum VMInstruction
   VMI__argument_mask = (1 << VMI__argument_bits) - 1
 };
 
+enum VMBytecodeSlots
+{
+  VMBS_Instructions, VMBS_Immediates,
+
+  VMBS__count
+};

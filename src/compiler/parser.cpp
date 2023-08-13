@@ -79,3 +79,28 @@ bool Parser::parse_expression()
 {
   return parse_infix();
 }
+
+bool Parser::parse_method_definition()
+{
+  return false;
+}
+
+bool Parser::parse_assignment()
+{
+  return false;
+}
+
+bool Parser::parse_statement()
+{
+  return parse_method_definition() || parse_assignment() || parse_expression();
+}
+
+bool Parser::parse_document()
+{
+  bool res = false;
+  while(parse_statement())
+  {
+    res = true;
+  }
+  return res;
+}

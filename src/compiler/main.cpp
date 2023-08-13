@@ -48,7 +48,8 @@ bool EventPrinter::accept_send(std::string_view selector, int arity)
 
 int main(int argc, const char** argv)
 {
-  bool lexer_debug = false, parser_debug = false;
+  bool lexer_debug = false, parser_debug = false,
+    compiler_debug = false;
   std::string input_path;
   std::string_view input_contents;
 
@@ -59,6 +60,9 @@ int main(int argc, const char** argv)
     })
     .on("--debug-parser", [&](){
       parser_debug = true;
+    })
+    .on("--debug-compiler", [&](){
+      compiler_debug = true;
     })
     .on("--file", [&](std::string_view arg){
       input_path = arg;
@@ -123,6 +127,30 @@ int main(int argc, const char** argv)
   MethodBuilder method_context(image);
   MethodParser parser(input_contents, method_context);
   parser.parse_expression();
+
+  if(compiler_debug)
+  {
+    std::cout << "stack size max= " << method_context.stack_size_max << std::endl
+      << "immediates (" << method_context.immediates.size() << ")" << std::endl;
+    for(auto imm : method_context.immediates)
+    {
+      if(oop_is_int(imm))
+      {
+        std::cout << "  int= " << oop_to_int(imm) << std::endl;
+      }
+      else
+      {
+        std::cout << "  oop= " << imm << std::endl;
+      }
+    }
+    std::cout << "instructions (" << method_context.instructions.size() << ")" << std::endl;
+    for(auto instr : method_context.instructions)
+    {
+      VMInstruction op = (VMInstruction)(instr & VMI__mask);
+      std::cout << "  op= " << op << std::endl;
+    }
+
+  }
 
   if(mmap_data)
   {
