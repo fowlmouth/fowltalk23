@@ -116,7 +116,11 @@ int main(int argc, const char** argv)
     p.parse_expression();
   }
 
-  MethodBuilder method_context;
+  Memory mem;
+  Image image(mem);
+  image.bootstrap();
+
+  MethodBuilder method_context(image);
   MethodParser parser(input_contents, method_context);
   parser.parse_expression();
 

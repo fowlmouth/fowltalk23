@@ -7,6 +7,10 @@ SRC := $(wildcard *.cpp)
 OBJ := $(SRC:.cpp=.o)
 
 ALL: $(SONAME) $(LIB)
+.PHONY: debug clean
+
+debug: CXXFLAGS += -DDEBUG -g -O0
+debug: $(SONAME)
 
 $(SONAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -o $@ $^ $(LDLIBS)

@@ -7,13 +7,12 @@ MethodParser::MethodParser(std::string_view input, MethodBuilder& builder)
 
 bool MethodParser::accept_integer(intmax_t number)
 {
-  (void)number;
+  builder_->load_immediate_integer(number);
   return true;
 }
 
 bool MethodParser::accept_send(std::string_view selector, int arity)
 {
-  (void)selector;
-  (void)arity;
+  builder_->send_message(selector.data(), arity);
   return true;
 }
