@@ -9,7 +9,9 @@ MethodBuilder::MethodBuilder(MethodBuilder* parent)
 : parent_(parent), image_(nullptr), stack_size(0), stack_size_max(0)
 {
   if(parent_)
+  {
     image_ = parent_->image_;
+  }
 }
 
 int MethodBuilder::push_immediate(oop value)
@@ -68,18 +70,7 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
 void MethodBuilder::load_immediate_integer(intmax_t value)
 {
   oop val = int_to_oop(value);
-  int index;
-  {
-    const auto iter = std::find(immediates.begin(), immediates.end(), val);
-    if(iter == immediates.end())
-    {
-      index = push_immediate(val);
-    }
-    else
-    {
-      index = std::distance(immediates.begin(), iter);
-    }
-  }
+  int index = immediate_unique_push(val);
   write_instruction(VMI_LoadImmediate, index);
 }
 
