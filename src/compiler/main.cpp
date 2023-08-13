@@ -149,7 +149,6 @@ int main(int argc, const char** argv)
       VMInstruction op = (VMInstruction)(instr & VMI__mask);
       std::cout << "  op= " << op << std::endl;
     }
-
   }
 
   if(mmap_data)

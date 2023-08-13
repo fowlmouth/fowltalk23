@@ -5,11 +5,9 @@ Image::Image(Memory& mem)
 {
 }
 
-Image Image::load(const char* filename, Memory& mem)
+void Image::load(const char* filename)
 {
   (void)filename;
-  
-  return Image(mem);
 }
 
 void Image::save(const char* filename)

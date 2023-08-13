@@ -9,15 +9,15 @@ LIBFOWL := libfowl.a
 LIBFOWL_FULL := ../lib/$(LIBFOWL)
 
 CXXFLAGS += -I../lib
-LDLIBS := -L../lib #$(LIBFOWL_FULL)
+LDLIBS := -L../lib -lfowl
 
 ALL: $(BIN)
 
-$(BIN): $(OBJ) $(LIBFOWL_FULL)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+$(BIN): $(OBJ) ../lib/libfowl.so
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LDLIBS)
 
 clean:
 	rm -rf $(OBJ) $(BIN)
 
-$(LIBFOWL_FULL):
-	make -C ../lib $(LIBFOWL)
+../lib/libfowl.so:
+	make -C ../lib libfowl.so

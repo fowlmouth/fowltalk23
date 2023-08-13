@@ -22,6 +22,7 @@ class MethodBuilder
   friend int main(int, const char**);
 
 protected:
+  // return value is the index of the immediate value
   int push_immediate(oop value);
   int immediate_unique_push(oop value); // terrible name
   int intern(const char* selector);

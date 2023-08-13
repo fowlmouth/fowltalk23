@@ -23,6 +23,17 @@ void CLI::parse(int argc, const char** argv) const
   for(int i = 1; i < argc; ++i)
   {
     auto arg = argv[i];
+    if(!strcmp(arg, "--"))
+    {
+      // parse the rest as arguments
+      ++i;
+      for(; i < argc; ++i)
+      {
+        argument_callback(argv[i]);
+      }
+      break;
+    }
+
     if(arg[0] == '-')
     {
       std::string_view option(arg);
@@ -44,4 +55,3 @@ void CLI::parse(int argc, const char** argv) const
     }
   }
 }
-

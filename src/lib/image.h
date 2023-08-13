@@ -35,8 +35,8 @@ class Image
 public:
   Image(Memory& mem);
 
-  static Image load(const char* filename, Memory& );
-  static void save(const char* filename);
+  void load(const char* filename);
+  void save(const char* filename);
 
   void bootstrap();
 
