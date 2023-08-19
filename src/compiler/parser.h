@@ -25,6 +25,7 @@ public:
   virtual ~Parser();
 
   bool parse_terminal();
+  bool parse_unary();
   bool parse_infix();
   bool parse_expression();
   bool parse_method_definition();

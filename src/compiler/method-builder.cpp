@@ -50,8 +50,10 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
     ++stack_size;
     break;
   case VMI_Send:
-    --stack_size; // for the selector
+    // --stack_size; // for the selector
     stack_size -= arg;
+    // ++stack_size; // for the result
+    // ^ commented out because they cancel each other out
     break;
 
   default:

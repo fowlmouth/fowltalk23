@@ -47,7 +47,8 @@ void Parser::report_error(std::string message)
   { \
     report_error(std::string("expected: ") + token_type_to_string(token_type)); \
     return false; \
-  }
+  } \
+  next();
 
 bool Parser::parse_terminal()
 {
@@ -70,15 +71,30 @@ bool Parser::parse_terminal()
   return false;
 }
 
-bool Parser::parse_infix()
+bool Parser::parse_unary()
 {
   if(parse_terminal())
+  {
+    std::cout << "current type= " << current_type() << " (" << token_type_to_string(current_type()) << ")" << std::endl;
+    while(current_type() == Token::Identifier)
+    {
+      CHECK_CALLBACK(accept_send(tok.string, 1));
+      next();
+    }
+    return true;
+  }
+  return false;
+}
+
+bool Parser::parse_infix()
+{
+  if(parse_unary())
   {
     if(current_type() == Token::Operator)
     {
       Token op = tok;
       next();
-      EXPECT(parse_terminal, "terminal");
+      EXPECT(parse_unary, "unary expression");
       CHECK_CALLBACK(accept_send(op.string, 2));
       return true;
     }
