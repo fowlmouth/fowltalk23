@@ -15,9 +15,7 @@ int main(int argc, const char** argv)
     })
     .parse(argc, argv);
 
-  Memory mem;
-
-  Image im(mem);
+  Image im(1 << 22);
   if(!image_path.empty())
   {
     im.load(image_path.c_str());

@@ -50,7 +50,7 @@ int main(int argc, const char** argv)
 {
   bool lexer_debug = false, parser_debug = false,
     compiler_debug = false;
-  std::string input_path;
+  std::string input_path, output_path;
   std::string_view input_contents;
 
   CLI cli;
@@ -69,6 +69,9 @@ int main(int argc, const char** argv)
     })
     .on("--input", [&](std::string_view arg){
       input_contents = arg;
+    })
+    .on("--output", [&](std::string_view arg){
+      output_path = arg;
     })
     .on_argument([&](std::string_view arg){
       input_path = arg;
@@ -120,8 +123,7 @@ int main(int argc, const char** argv)
     p.parse_expression();
   }
 
-  Memory mem;
-  Image image(mem);
+  Image image(1 << 22);
   image.bootstrap();
 
   MethodBuilder method_context(image);
@@ -154,6 +156,11 @@ int main(int argc, const char** argv)
   if(mmap_data)
   {
     munmap(mmap_data, input_contents.size());
+  }
+
+  if(!output_path.empty())
+  {
+    image.save(output_path.c_str());
   }
 
   return 0;

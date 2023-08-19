@@ -6,12 +6,14 @@
 
 #include <cstring>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 
+// OSX
+#include <sys/mman.h>
 
-class Image
+class Image : public Memory
 {
-  Memory& mem;
   object_array special_objects;
 
   enum add_slot_result_t
@@ -31,9 +33,11 @@ class Image
   add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, oop value);
 
   unsigned int hash_symbol(string_ref symbol);
+  void replace_data(void*, std::size_t);
 
 public:
-  Image(Memory& mem);
+  Image(std::size_t image_size);
+  ~Image();
 
   void load(const char* filename);
   void save(const char* filename);
@@ -44,6 +48,3 @@ public:
 
   oop special_object(std::size_t index) const;
 };
-
-
-

@@ -1,18 +1,88 @@
 #include "image.h"
 
-Image::Image(Memory& mem)
-: mem(mem)
+Image::Image(std::size_t image_size)
+: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size)
 {
 }
+
+Image::~Image()
+{
+  munmap(this->region_start, this->region_size);
+}
+
+void Image::replace_data(void* data, std::size_t size)
+{
+  munmap(this->region_start, this->region_size);
+  this->region_start = data;
+  this->region_size = size;
+}
+
+struct ImageHeader
+{
+  void* region_start;
+  uint32_t region_size;
+  void* special_objects;
+};
 
 void Image::load(const char* filename)
 {
   (void)filename;
+
+  FILE* fp = fopen(filename, "rw");
+  if(!fp)
+  {
+    std::cerr << "failed to open file for reading '" << filename << "'" << std::endl;
+    return;
+  }
+
+  ImageHeader header;
+  fread(&header, sizeof(header), 1, fp);
+
+  // get the size
+  fseek(fp, 0, SEEK_END);
+  auto file_size = (uint32_t)ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+
+  if(file_size != header.region_size)
+  {
+    std::cerr << "region size mismatch, region size= " << header.region_size << " expected " << file_size << std::endl;
+    return;
+  }
+
+  int file_id = fileno(fp);
+  void* data = mmap(header.region_start, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, file_id, 0);
+  fclose(fp);
+
+  if(!data)
+  {
+    std::cerr << "failed to mmap file" << std::endl;
+    return;
+  }
+
+  replace_data(data, file_size);
+
+  if(header.region_start != data)
+  {
+    std::cerr << "warning: region start mismatch, region start= " << header.region_start << " expected " << data << std::endl;
+  }
 }
 
 void Image::save(const char* filename)
 {
+  ImageHeader header{ region_start, (uint32_t)region_size, special_objects };
   (void)filename;
+  (void)header;
+
+  FILE* fp = fopen(filename, "w+");
+  if(!fp)
+  {
+    std::cerr << "failed to open file for writing '" << filename << "'" << std::endl;
+    return;
+  }
+
+  fwrite(&header, sizeof(header), 1, fp);
+  fwrite(region_start, region_size, 1, fp);
+  fclose(fp);
 }
 
 static inline void set_vtable(oop object, vtable_object* new_vt)
@@ -24,38 +94,38 @@ static inline void set_vtable(oop object, vtable_object* new_vt)
 void Image::bootstrap()
 {
   // vtable vtable is used by 99% of vtables
-  vtable_object* vtable_vt = vtable_object::make(32, 1, nullptr, mem);
+  vtable_object* vtable_vt = vtable_object::make(32, 1, nullptr, *this);
   set_vtable(vtable_vt, vtable_vt);
 
   // "defaultBehavior" object
-  vtable_object* root_vt = vtable_object::make(32, 0, vtable_vt, mem);
-  oop root_object = mem.alloc(root_vt, 0);
+  vtable_object* root_vt = vtable_object::make(32, 0, vtable_vt, *this);
+  oop root_object = alloc(root_vt, 0);
 
   vtable_vt->static_parents_begin()[0] = root_object;
 
   // string primitive vt
-  vtable_object* string_primitive_vt = vtable_object::make(32, 1, vtable_vt, mem);
+  vtable_object* string_primitive_vt = vtable_object::make(32, 1, vtable_vt, *this);
   string_primitive_vt->static_parents_begin()[0] = root_object;
 
   // array primitive vt
-  vtable_object* array_primitive_vt = vtable_object::make(32, 1, vtable_vt, mem);
-  special_objects = (object_array)mem.alloc_words(array_primitive_vt, soid__count);
+  vtable_object* array_primitive_vt = vtable_object::make(32, 1, vtable_vt, *this);
+  special_objects = (object_array)alloc_words(array_primitive_vt, soid__count);
   special_objects[soid_symbolVt] = string_primitive_vt;
   // now strings can be interned for slots
 
-  vtable_object* lobby_vt = vtable_object::make(128, 1, vtable_vt, mem);
+  vtable_object* lobby_vt = vtable_object::make(128, 1, vtable_vt, *this);
 
   // holds a map with primitive info for the vm
-  vtable_object* primitive_map_vt = vtable_object::make(pid__count, 0, vtable_vt, mem);
+  vtable_object* primitive_map_vt = vtable_object::make(pid__count, 0, vtable_vt, *this);
 
-  oop lobby = mem.alloc(lobby_vt, 0);
+  oop lobby = alloc(lobby_vt, 0);
 
   special_objects[soid_vtableVt] = vtable_vt;
-  special_objects[soid_primitiveMap] = mem.alloc(primitive_map_vt, 0);
+  special_objects[soid_primitiveMap] = alloc(primitive_map_vt, 0);
   special_objects[soid_lobby] = lobby;
 
-  vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, mem);
-  oop globals = mem.alloc(globals_vt, 0);
+  vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
+  oop globals = alloc(globals_vt, 0);
 
   add_slot(lobby_vt, "Globals", vts_static_parent, globals);
 
@@ -166,7 +236,7 @@ string_ref Image::intern(const char* symbol)
 {
   vtable_object* symbolVt = (vtable_object*)special_object(soid_symbolVt);
   auto len = strlen(symbol);
-  char* new_symbol = (char*)mem.alloc(symbolVt, len + 1);
+  char* new_symbol = (char*)alloc(symbolVt, len + 1);
   strcpy(new_symbol, symbol);
   new_symbol[len] = 0;
   return new_symbol;

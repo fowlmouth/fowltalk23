@@ -61,10 +61,25 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
   {
     stack_size_max = stack_size;
   }
+  if(stack_size < 0)
+  {
+    throw MethodBuilder::StackUnderflowError{};
+  }
 
-  vm_instruction_t op = (vm_instruction_t)instruction & VMI__mask;
-  op |= (arg & VMI__argument_mask) << VMI__bits;
-  instructions.push_back(op);
+  vm_instruction_t buffer[16];
+
+  vm_instruction_t *op = buffer + 16;
+
+  *--op = ((vm_instruction_t)instruction & VMI__mask)
+    | ((vm_instruction_t)(arg & VMI__argument_mask) << VMI__bits);
+  arg >>= VMI__argument_bits;
+  while(arg && op > buffer)
+  {
+    *--op = (vm_instruction_t)VMI_Extend
+      | ((vm_instruction_t)(arg & VMI__argument_mask) << VMI__bits);
+    arg >>= VMI__argument_bits;
+  }
+  instructions.insert(instructions.end(), op, buffer+16);
 }
 
 void MethodBuilder::load_immediate_integer(intmax_t value)

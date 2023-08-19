@@ -1,5 +1,21 @@
 #include "lexer.h"
 
+const char* token_type_to_string(Token::Type type)
+{
+  switch(type)
+  {
+  case Token::EndOfFile: return "EndOfFile";
+  case Token::Identifier: return "Identifier";
+  case Token::Operator: return "Operator";
+  case Token::Integer: return "Integer";
+  case Token::String: return "String";
+  case Token::OpenParen: return "OpenParen";
+  case Token::CloseParen: return "CloseParen";
+  default: return "???";
+  }
+}
+
+
 Lexer::Lexer(std::string_view input)
 : input(input)
 , index(0), line(0), col(0)
@@ -91,6 +107,15 @@ Token Lexer::next()
 
   case '+': case '-': case '/': case '*':
     token.type = Token::Operator;
+    next_char();
+    break;
+
+  case '(':
+    token.type = Token::OpenParen;
+    next_char();
+    break;
+  case ')':
+    token.type = Token::CloseParen;
     next_char();
     break;
 

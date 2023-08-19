@@ -18,6 +18,8 @@ class MethodBuilder
   int stack_size, stack_size_max;
   std::vector< oop > immediates;
   std::vector< vm_instruction_t > instructions;
+  int arity;
+  std::vector< std::string > variable_names;
 
   friend int main(int, const char**);
 
@@ -32,6 +34,10 @@ protected:
 public:
   MethodBuilder(Image& image);
   MethodBuilder(MethodBuilder* parent);
+
+  struct StackUnderflowError
+  {
+  };
 
   void load_immediate_integer(intmax_t value);
   void send_message(const char* selector, int arg_count);
