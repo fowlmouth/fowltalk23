@@ -35,6 +35,19 @@ void Parser::report_error(std::string message)
     } \
   }while(0)
 
+#define EXPECT(parse_fn, name_string) \
+  if(!(parse_fn())) \
+  { \
+    report_error(std::string("expected: ") + std::string(name_string)); \
+    return false; \
+  }
+
+#define EXPECT_TOKEN(token_type) \
+  if(current_type() != token_type) \
+  { \
+    report_error(std::string("expected: ") + token_type_to_string(token_type)); \
+    return false; \
+  }
 
 bool Parser::parse_terminal()
 {
@@ -45,18 +58,17 @@ bool Parser::parse_terminal()
     next();
     return true;
 
+  case Token::OpenParen:
+    next();
+    EXPECT(parse_expression, "expression");
+    EXPECT_TOKEN(Token::CloseParen);
+    return true;
+
   default:
     break;
   }
   return false;
 }
-
-#define EXPECT(parse_fn, name_string) \
-  if(!(parse_fn())) \
-  { \
-    report_error(std::string("expected: ") + std::string(name_string)); \
-    return false; \
-  }
 
 bool Parser::parse_infix()
 {
