@@ -1,20 +1,11 @@
 #include "mem.h"
 
-struct MemorySpaceHeader
+Memory::Memory(void* region_start, std::size_t region_size, void* next_alloc)
+: region_start(region_start), next_alloc(next_alloc), region_size(region_size)
 {
-  void* begin;
-  std::size_t size;
-  void* next_alloc;
-};
-
-Memory::Memory(void* region_start, std::size_t region_size)
-: region_start(region_start), region_size(region_size)
-{
-  MemorySpaceHeader* header = reinterpret_cast< MemorySpaceHeader* >(region_start);
-  next_alloc = reinterpret_cast< void* >(header + 1);
-  if(header->next_alloc)
+  if(!next_alloc)
   {
-    next_alloc = header->next_alloc;
+    next_alloc = region_start;
   }
 }
 

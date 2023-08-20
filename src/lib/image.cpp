@@ -1,8 +1,22 @@
 #include "image.h"
 
-Image::Image(std::size_t image_size)
-: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size)
+struct ImageHeader
 {
+  uint32_t region_size, flags;
+  void* region_start, *next_alloc;
+};
+
+Image::Image(std::size_t image_size)
+: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, nullptr)
+{
+  ImageHeader* header = (ImageHeader*)region_start;
+  header->region_size = image_size;
+  header->region_start = region_start;
+  next_alloc = header->next_alloc;
+  if(!next_alloc)
+  {
+    next_alloc = header->next_alloc = header+1;
+  }
 }
 
 Image::~Image()
@@ -17,12 +31,46 @@ void Image::replace_data(void* data, std::size_t size)
   this->region_size = size;
 }
 
-struct ImageHeader
+void Image::update_header()
 {
-  void* region_start;
-  uint32_t region_size;
-  void* special_objects;
-};
+  ImageHeader* header = (ImageHeader*)region_start;
+  header->next_alloc = next_alloc;
+}
+
+void update_addr(void** value, ptrdiff_t offset_words, void** begin, void** end)
+{
+  if(*value >= begin && *value < end)
+  {
+    *value = (void**)*value + offset_words;
+  }
+}
+
+void Image::migrate_data()
+{
+  ImageHeader* header = (ImageHeader*)region_start;
+  void** old_base = (void**)header->region_start;
+  void** old_base_end = old_base + header->region_size / sizeof(void*);
+  void** new_base = (void**)region_start;
+
+  ptrdiff_t offset_words = new_base - old_base;
+
+  // update all pointers
+  oop* datap = (oop*)(header+1);
+  while(datap < header->next_alloc)
+  {
+    if(oop_is_int(*datap))
+    {
+      // deleted object, value is the size in words
+      datap += oop_to_int(*datap) + 1;
+    }
+    else
+    {
+      // active object, this field is a vtable pointer
+      update_addr(datap, offset_words, old_base, old_base_end);
+      throw TODO{};
+    }
+  }
+}
 
 void Image::load(const char* filename)
 {
@@ -64,15 +112,12 @@ void Image::load(const char* filename)
   if(header.region_start != data)
   {
     std::cerr << "warning: region start mismatch, region start= " << header.region_start << " expected " << data << std::endl;
+    migrate_data();
   }
 }
 
 void Image::save(const char* filename)
 {
-  ImageHeader header{ region_start, (uint32_t)region_size, special_objects };
-  (void)filename;
-  (void)header;
-
   FILE* fp = fopen(filename, "w+");
   if(!fp)
   {
@@ -80,7 +125,7 @@ void Image::save(const char* filename)
     return;
   }
 
-  fwrite(&header, sizeof(header), 1, fp);
+  update_header();
   fwrite(region_start, region_size, 1, fp);
   fclose(fp);
 }

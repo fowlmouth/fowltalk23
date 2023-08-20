@@ -14,7 +14,7 @@ protected:
   std::size_t region_size;
 
 public:
-  Memory(void* region_start, std::size_t region_size);
+  Memory(void* region_start, std::size_t region_size, void* next_alloc);
   ~Memory();
 
   struct MemoryExhaustedError

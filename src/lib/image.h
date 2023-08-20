@@ -12,6 +12,8 @@
 // OSX
 #include <sys/mman.h>
 
+struct TODO{};
+
 class Image : public Memory
 {
   object_array special_objects;
@@ -34,6 +36,8 @@ class Image : public Memory
 
   unsigned int hash_symbol(string_ref symbol);
   void replace_data(void*, std::size_t);
+  void update_header();
+  void migrate_data();
 
 public:
   Image(std::size_t image_size);
