@@ -37,41 +37,6 @@ void Image::update_header()
   header->next_alloc = next_alloc;
 }
 
-void update_addr(void** value, ptrdiff_t offset_words, void** begin, void** end)
-{
-  if(*value >= begin && *value < end)
-  {
-    *value = (void**)*value + offset_words;
-  }
-}
-
-void Image::migrate_data()
-{
-  ImageHeader* header = (ImageHeader*)region_start;
-  void** old_base = (void**)header->region_start;
-  void** old_base_end = old_base + header->region_size / sizeof(void*);
-  void** new_base = (void**)region_start;
-
-  ptrdiff_t offset_words = new_base - old_base;
-
-  // update all pointers
-  oop* datap = (oop*)(header+1);
-  while(datap < header->next_alloc)
-  {
-    if(oop_is_int(*datap))
-    {
-      // deleted object, value is the size in words
-      datap += oop_to_int(*datap) + 1;
-    }
-    else
-    {
-      // active object, this field is a vtable pointer
-      update_addr(datap, offset_words, old_base, old_base_end);
-      throw TODO{};
-    }
-  }
-}
-
 void Image::load(const char* filename)
 {
   (void)filename;
@@ -112,7 +77,6 @@ void Image::load(const char* filename)
   if(header.region_start != data)
   {
     std::cerr << "warning: region start mismatch, region start= " << header.region_start << " expected " << data << std::endl;
-    migrate_data();
   }
 }
 
@@ -130,10 +94,10 @@ void Image::save(const char* filename)
   fclose(fp);
 }
 
-static inline void set_vtable(oop object, vtable_object* new_vt)
+void Image::set_vtable(void* object, vtable_object* new_vt)
 {
   // *((void**)object - 1) = new_vt;
-  ((object_array)object)[-1] = new_vt;
+  ((object_array)object)[-1] = offset(new_vt);
 }
 
 void Image::bootstrap()
@@ -144,18 +108,18 @@ void Image::bootstrap()
 
   // "defaultBehavior" object
   vtable_object* root_vt = vtable_object::make(32, 0, vtable_vt, *this);
-  oop root_object = alloc(root_vt, 0);
+  void* root_object = alloc(root_vt, 0);
 
-  vtable_vt->static_parents_begin()[0] = root_object;
+  vtable_vt->static_parents_begin()[0] = offset(root_object);
 
   // string primitive vt
   vtable_object* string_primitive_vt = vtable_object::make(32, 1, vtable_vt, *this);
-  string_primitive_vt->static_parents_begin()[0] = root_object;
+  string_primitive_vt->static_parents_begin()[0] = offset(root_object);
 
   // array primitive vt
   vtable_object* array_primitive_vt = vtable_object::make(32, 1, vtable_vt, *this);
   special_objects = (object_array)alloc_words(array_primitive_vt, soid__count);
-  special_objects[soid_symbolVt] = string_primitive_vt;
+  special_objects[soid_symbolVt] = offset(string_primitive_vt);
   // now strings can be interned for slots
 
   vtable_object* lobby_vt = vtable_object::make(128, 1, vtable_vt, *this);
@@ -163,14 +127,14 @@ void Image::bootstrap()
   // holds a map with primitive info for the vm
   vtable_object* primitive_map_vt = vtable_object::make(pid__count, 0, vtable_vt, *this);
 
-  oop lobby = alloc(lobby_vt, 0);
+  void* lobby = alloc(lobby_vt, 0);
 
-  special_objects[soid_vtableVt] = vtable_vt;
-  special_objects[soid_primitiveMap] = alloc(primitive_map_vt, 0);
-  special_objects[soid_lobby] = lobby;
+  special_objects[soid_vtableVt] = offset(vtable_vt);
+  special_objects[soid_primitiveMap] = offset(alloc(primitive_map_vt, 0));
+  special_objects[soid_lobby] = offset(lobby);
 
   vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
-  oop globals = alloc(globals_vt, 0);
+  void* globals = alloc(globals_vt, 0);
 
   add_slot(lobby_vt, "Globals", vts_static_parent, globals);
 
@@ -195,7 +159,7 @@ unsigned int Image::hash_symbol(string_ref symbol)
   return djb2((const char*)symbol);
 }
 
-Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, oop value)
+Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, void* value_object)
 {
   if(vtable->slot_count == vtable->slot_capacity)
   {
@@ -218,6 +182,8 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
     index = (index + 1) & slot_mask;
     slot = vtable->slots_begin() + index;
   }
+
+  oop value = offset(value_object);
 
   switch(flags)
   {

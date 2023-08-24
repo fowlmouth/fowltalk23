@@ -2,6 +2,8 @@
 
 #include "mem.h"
 
+#include "object.h"
+
 #include <cstdint>
 #include <cstddef>
 
@@ -18,7 +20,6 @@ enum vtable_slot_flags
   vts__mask = (1 << vts__bit_count) - 1
 };
 
-using oop = void*;
 using string_ref = char*;
 
 struct vtable_slot
@@ -67,10 +68,10 @@ public:
   static std::size_t calculate_vtable_size(std::size_t slot_capacity, std::size_t static_parent_count);
   static vtable_object* make(std::size_t slot_count, std::size_t static_parent_count, vtable_object* vtable_vt, Memory& mem);
 
-  oop allocate_instance(Memory& mem);
+  void* allocate_instance(Memory& mem);
 
 };
 
 vtable_object* oop_vtable(oop o);
-
-
+oop object_vtable(void* object);
+vtable_object* object_vtable(void* object, Memory& memory);

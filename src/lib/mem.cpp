@@ -22,10 +22,10 @@ void* Memory::alloc(vtable_object* vtable, std::size_t size)
   {
     size = sizeof(void*);
   }
-  vtable_object** header = (vtable_object**)next_alloc;
+  oop* header = (oop*)next_alloc;
   next_alloc = (char*)next_alloc + sizeof(void*) + size;
-  *header = vtable;
-  return (oop)(header+1);
+  *header = offset(vtable);
+  return (void*)(header+1);
 }
 
 void* Memory::alloc_words(vtable_object* vtable, std::size_t words)
@@ -36,4 +36,14 @@ void* Memory::alloc_words(vtable_object* vtable, std::size_t words)
 void Memory::free(void* ptr)
 {
   (void)ptr;
+}
+
+image_offset_t Memory::offset(void* ptr) const
+{
+  return (image_offset_t)((char*)ptr - (char*)region_start);
+}
+
+void* Memory::ptr(image_offset_t offset) const
+{
+  return (char*)region_start + offset;
 }

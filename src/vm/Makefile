@@ -12,6 +12,10 @@ CXXFLAGS += -I../lib
 LDLIBS := -L../lib -lfowl
 
 ALL: $(BIN)
+.PHONY: debug clean
+
+debug: CXXFLAGS += -g -O0
+debug: $(BIN)
 
 $(BIN): $(OBJ) ../lib/libfowl.so
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LDLIBS)

@@ -24,6 +24,9 @@ public:
   void* alloc(vtable_object* vtable, std::size_t size);
   void free(void* ptr);
 
-  oop alloc_words(vtable_object* vt, std::size_t words);
+  void* alloc_words(vtable_object* vt, std::size_t words);
+
+  image_offset_t offset(void* ptr) const;
+  void* ptr(image_offset_t offset) const;
 
 };

@@ -3,11 +3,11 @@ include config.mk
 ALL: vm compiler 
 .PHONY: clean cleanall
 
-vm: src/vm/vm
+vm: src/vm/vm libfowl.so
 	cp src/vm/vm ./
 
 src/vm/vm: $(wildcard src/vm/*.cpp)
-	$(MAKE) -C src/vm
+	$(MAKE) -C src/vm debug
 
 libfowl.so: src/lib/libfowl.so
 	cp src/lib/libfowl.so ./
@@ -15,7 +15,7 @@ libfowl.so: src/lib/libfowl.so
 src/lib/libfowl.so: $(wildcard src/lib/*.cpp)
 	$(MAKE) -C src/lib debug
 
-compiler: src/compiler/compiler src/lib/libfowl.so
+compiler: src/compiler/compiler libfowl.so
 	cp src/compiler/compiler ./
 
 src/compiler/compiler: $(wildcard src/compiler/*.cpp)

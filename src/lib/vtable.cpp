@@ -86,16 +86,19 @@ vtable_object* oop_vtable(oop o)
   return (vtable_object*)*((void**)o - 1);
 }
 
-static void set_vtable(oop object, vtable_object* new_vt)
+oop object_vtable(void* object)
 {
-  // *(**void)object) - 1) = new_vt;
-  ((object_array)object)[-1] = new_vt;
+  return ((oop*)object)[-1];
 }
 
-oop vtable_object::allocate_instance(Memory& mem)
+vtable_object* object_vtable(void* object, Memory& memory)
 {
-  oop result = mem.alloc(this, instance_size_words * sizeof(oop));
-  set_vtable(result, this);
+  return (vtable_object*)memory.ptr(object_vtable(object));
+}
+
+void* vtable_object::allocate_instance(Memory& mem)
+{
+  void* result = mem.alloc(this, instance_size_words * sizeof(oop));
   return result;
 }
 

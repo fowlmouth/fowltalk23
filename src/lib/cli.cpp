@@ -29,7 +29,10 @@ void CLI::parse(int argc, const char** argv) const
       ++i;
       for(; i < argc; ++i)
       {
-        argument_callback(argv[i]);
+        if(argument_callback)
+        {
+          argument_callback(argv[i]);
+        }
       }
       break;
     }
@@ -49,7 +52,7 @@ void CLI::parse(int argc, const char** argv) const
         }
       }
     }
-    else
+    else if(argument_callback)
     {
       argument_callback(arg);
     }
