@@ -245,7 +245,7 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
 
 string_ref Image::intern(const char* symbol)
 {
-  vtable_object* symbolVt = (vtable_object*)special_object(soid_symbolVt);
+  vtable_object* symbolVt = (vtable_object*)ptr(special_object(soid_symbolVt));
   auto len = strlen(symbol);
   char* new_symbol = (char*)alloc(symbolVt, len + 1);
   strcpy(new_symbol, symbol);
