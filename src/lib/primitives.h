@@ -10,7 +10,7 @@ enum primitive_id_t
 
 enum special_objects_index_t
 {
-  soid_vtableVt, soid_symbolVt, soid_primitiveMap, soid_lobby,
+  soid_vtableVt, soid_symbolVt, soid_primitiveMap, soid_symbolMapVt, soid_lobby,
 
   soid__count
 };

@@ -131,6 +131,7 @@ void Image::bootstrap()
 
   special_objects[soid_vtableVt] = offset(vtable_vt);
   special_objects[soid_primitiveMap] = offset(alloc(primitive_map_vt, 0));
+  special_objects[soid_symbolMapVt] = offset(vtable_object::make(128, 0, vtable_vt, *this));
   special_objects[soid_lobby] = offset(lobby);
 
   vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
@@ -245,11 +246,35 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
 
 string_ref Image::intern(const char* symbol)
 {
+  auto hash = djb2(symbol);
+  auto symbol_map_vt = (vtable_object*)ptr(special_object(soid_symbolMapVt));
+  const unsigned int slot_mask = symbol_map_vt->slot_capacity - 1;
+  unsigned int index = hash & slot_mask;
+  vtable_slot* slot = symbol_map_vt->slots_begin() + index;
+  for(; !slot->empty(); slot = symbol_map_vt->slots_begin() + (++index & slot_mask))
+  {
+    if(!std::strcmp(slot->key(), symbol))
+    {
+      return (string_ref)ptr(slot->value());
+    }
+  }
+
+  if(symbol_map_vt->slot_count == symbol_map_vt->slot_capacity)
+  {
+    std::cerr << "TODO: symbol map VT capacity reached" << std::endl;
+    throw TODO{};
+  }
+
   vtable_object* symbolVt = (vtable_object*)ptr(special_object(soid_symbolVt));
   auto len = strlen(symbol);
   char* new_symbol = (char*)alloc(symbolVt, len + 1);
   strcpy(new_symbol, symbol);
   new_symbol[len] = 0;
+
+  // manual add_slot here
+  *slot = vtable_slot(vts_static, new_symbol, offset(new_symbol));
+  ++ symbol_map_vt->slot_count;
+
   return new_symbol;
 }
 

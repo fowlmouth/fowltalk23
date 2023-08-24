@@ -13,6 +13,6 @@ bool MethodParser::accept_integer(intmax_t number)
 
 bool MethodParser::accept_send(std::string_view selector, int arity)
 {
-  builder_->send_message(selector.data(), arity);
+  builder_->send_message(selector, arity);
   return true;
 }
