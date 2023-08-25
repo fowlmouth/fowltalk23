@@ -36,7 +36,6 @@ int MethodBuilder::immediate_unique_push(oop value)
 int MethodBuilder::intern(const char* symbol)
 {
   oop val = image_->offset(image_->intern(symbol));
-  std::cerr << "interned '" << symbol << "' oop= " << val << std::endl;
   int index = immediate_unique_push(val);
   return index;
 }
