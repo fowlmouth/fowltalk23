@@ -25,14 +25,14 @@ using string_ref = char*;
 struct vtable_slot
 {
 protected:
-  string_ref key_flags;
+  image_offset_t key_flags;
   oop value_;
 
 public:
-  vtable_slot(vtable_slot_flags, string_ref key, oop value);
+  vtable_slot(vtable_slot_flags, image_offset_t key, oop value);
 
   enum vtable_slot_flags flags() const;
-  string_ref key() const;
+  image_offset_t key() const;
   oop value() const;
 
   inline bool empty() const

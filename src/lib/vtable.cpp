@@ -1,7 +1,7 @@
 #include "vtable.h"
 
-vtable_slot::vtable_slot(vtable_slot_flags flags, string_ref key, oop value)
-  : key_flags((string_ref)((uintptr_t)key | ((uintptr_t)flags & vts__mask))), value_(value)
+vtable_slot::vtable_slot(vtable_slot_flags flags, image_offset_t key, oop value)
+: key_flags((image_offset_t)((uintptr_t)key | ((uintptr_t)flags & vts__mask))), value_(value)
 {
 }
 
@@ -11,10 +11,10 @@ enum vtable_slot_flags vtable_slot::flags() const
   return (enum vtable_slot_flags)((uintptr_t)key_flags & vts__mask);
 }
 
-string_ref vtable_slot::key() const
+image_offset_t vtable_slot::key() const
 {
   // the key is stored in the upper bits of the key_flags
-  return (string_ref)((uintptr_t)key_flags & ~(uintptr_t)vts__mask);
+  return (image_offset_t)((uintptr_t)key_flags & ~(uintptr_t)vts__mask);
 }
 
 oop vtable_slot::value() const

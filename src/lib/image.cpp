@@ -170,13 +170,14 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
   flags = (vtable_slot_flags)(flags & vts__mask);
 
   string_ref symbol = intern(slot_name);
+  oop symbol_offset = offset(symbol);
   const unsigned int slot_mask = vtable->slot_capacity - 1;
   auto hash = hash_symbol(symbol);
   unsigned int index = hash & slot_mask;
   vtable_slot* slot = vtable->slots_begin() + index;
   while(! slot->empty())
   {
-    if(slot->key() == symbol)
+    if(slot->key() == symbol_offset)
     {
       return asr_error_slot_exists;
     }
@@ -206,13 +207,13 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
       return asr_error_too_many_static_parents;
     }
     vtable->static_parents_begin()[ static_parent_index ] = value;
-    *slot = vtable_slot(flags, symbol, int_to_oop(static_parent_index));
+    *slot = vtable_slot(flags, symbol_offset, int_to_oop(static_parent_index));
 
   } break;
 
   case vts_static:
     // static data slot
-    *slot = vtable_slot(flags, symbol, value);
+    *slot = vtable_slot(flags, symbol_offset, value);
     break;
 
   case vts_parent:
@@ -229,7 +230,7 @@ Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot
   {
     // instance data slot
     auto instance_index = vtable->instance_size_words ++;
-    *slot = vtable_slot(flags, symbol, int_to_oop(instance_index));
+    *slot = vtable_slot(flags, symbol_offset, int_to_oop(instance_index));
 
   } break;
 
@@ -253,7 +254,7 @@ string_ref Image::intern(const char* symbol)
   vtable_slot* slot = symbol_map_vt->slots_begin() + index;
   for(; !slot->empty(); slot = symbol_map_vt->slots_begin() + (++index & slot_mask))
   {
-    if(!std::strcmp(slot->key(), symbol))
+    if(!std::strcmp((string_ref)ptr(slot->key()), symbol))
     {
       return (string_ref)ptr(slot->value());
     }
@@ -272,7 +273,7 @@ string_ref Image::intern(const char* symbol)
   new_symbol[len] = 0;
 
   // manual add_slot here
-  *slot = vtable_slot(vts_static, new_symbol, offset(new_symbol));
+  *slot = vtable_slot(vts_static, offset(new_symbol), offset(new_symbol));
   ++ symbol_map_vt->slot_count;
 
   return new_symbol;
