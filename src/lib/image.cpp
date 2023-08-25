@@ -115,6 +115,7 @@ void Image::bootstrap()
   vtable_object* array_primitive_vt = vtable_object::make(32, 1, vtable_vt, *this);
   special_objects = (object_array)alloc_words(array_primitive_vt, soid__count);
   special_objects[soid_symbolVt] = offset(string_primitive_vt);
+  special_objects[soid_symbolMapVt] = offset(vtable_object::make(128, 0, vtable_vt, *this));
   // now strings can be interned for slots
 
   vtable_object* lobby_vt = vtable_object::make(128, 1, vtable_vt, *this);
@@ -126,7 +127,6 @@ void Image::bootstrap()
 
   special_objects[soid_vtableVt] = offset(vtable_vt);
   special_objects[soid_primitiveMap] = offset(alloc(primitive_map_vt, 0));
-  special_objects[soid_symbolMapVt] = offset(vtable_object::make(128, 0, vtable_vt, *this));
   special_objects[soid_lobby] = offset(lobby);
 
   vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
@@ -138,6 +138,13 @@ void Image::bootstrap()
   add_slot(globals_vt, "VTableVT", vts_static, vtable_vt);
   add_slot(globals_vt, "PrimitiveArrayVT", vts_static, array_primitive_vt);
   add_slot(globals_vt, "PrimitiveStringVT", vts_static, string_primitive_vt);
+
+  // add typeName slots
+  add_slot(vtable_vt, "typeName", vts_static, intern("VTable"));
+  add_slot(string_primitive_vt, "typeName", vts_static, intern("String"));
+  add_slot(array_primitive_vt, "typeName", vts_static, intern("Array"));
+  add_slot(lobby_vt, "typeName", vts_static, intern("Lobby"));
+  add_slot(globals_vt, "typeName", vts_static, intern("Globals"));
 }
 
 inline unsigned int djb2(const char* str)
