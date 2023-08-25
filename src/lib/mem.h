@@ -10,11 +10,12 @@ struct vtable_object;
 class Memory
 {
 protected:
-  void* region_start, *next_alloc;
+  void* region_start;
+  image_offset_t next_alloc;
   std::size_t region_size;
 
 public:
-  Memory(void* region_start, std::size_t region_size, void* next_alloc);
+  Memory(void* region_start, std::size_t region_size, image_offset_t next_alloc);
   ~Memory();
 
   struct MemoryExhaustedError

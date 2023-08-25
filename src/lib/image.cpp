@@ -3,19 +3,19 @@
 struct ImageHeader
 {
   uint32_t region_size, flags;
-  void* region_start, *next_alloc;
+  uint64_t next_alloc;
 };
 
 Image::Image(std::size_t image_size)
-: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, nullptr)
+: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, 0)
 {
   ImageHeader* header = (ImageHeader*)region_start;
   header->region_size = image_size;
-  header->region_start = region_start;
-  next_alloc = header->next_alloc;
+  header->flags = 0;
+  next_alloc = (image_offset_t)header->next_alloc;
   if(!next_alloc)
   {
-    next_alloc = header->next_alloc = header+1;
+    next_alloc = header->next_alloc = sizeof(ImageHeader);
   }
 }
 
@@ -34,7 +34,7 @@ void Image::replace_data(void* data, std::size_t size)
 void Image::update_header()
 {
   ImageHeader* header = (ImageHeader*)region_start;
-  header->next_alloc = next_alloc;
+  header->next_alloc = (uint64_t)next_alloc;
 }
 
 void Image::load(const char* filename)
@@ -63,7 +63,7 @@ void Image::load(const char* filename)
   }
 
   int file_id = fileno(fp);
-  void* data = mmap(header.region_start, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, file_id, 0);
+  void* data = mmap(nullptr, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, file_id, 0);
   fclose(fp);
 
   if(!data)
@@ -73,11 +73,6 @@ void Image::load(const char* filename)
   }
 
   replace_data(data, file_size);
-
-  if(header.region_start != data)
-  {
-    std::cerr << "warning: region start mismatch, region start= " << header.region_start << " expected " << data << std::endl;
-  }
 }
 
 void Image::save(const char* filename)

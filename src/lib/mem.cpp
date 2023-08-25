@@ -1,12 +1,8 @@
 #include "mem.h"
 
-Memory::Memory(void* region_start, std::size_t region_size, void* next_alloc)
+Memory::Memory(void* region_start, std::size_t region_size, image_offset_t next_alloc)
 : region_start(region_start), next_alloc(next_alloc), region_size(region_size)
 {
-  if(!next_alloc)
-  {
-    next_alloc = region_start;
-  }
 }
 
 Memory::~Memory()
@@ -17,13 +13,13 @@ Memory::~Memory()
 
 void* Memory::alloc(vtable_object* vtable, std::size_t size)
 {
-  size = ALIGN8(size);
-  if(size < sizeof(void*))
+  size = ALIGN8(size+sizeof(oop));
+  if(size < sizeof(oop)*2)
   {
-    size = sizeof(void*);
+    size = sizeof(oop)*2;
   }
-  oop* header = (oop*)next_alloc;
-  next_alloc = (char*)next_alloc + sizeof(void*) + size;
+  oop* header = (oop*)((char*)region_start + next_alloc);
+  next_alloc += size;
   *header = offset(vtable);
   return (void*)(header+1);
 }
