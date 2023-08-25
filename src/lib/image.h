@@ -12,6 +12,8 @@
 // OSX
 #include <sys/mman.h>
 
+struct TODO{};
+
 class Image : public Memory
 {
   object_array special_objects;
@@ -30,10 +32,13 @@ class Image : public Memory
     asr__count = asr_error_too_many_slots + 1
   };
 
-  add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, oop value);
+  add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, void* value);
 
   unsigned int hash_symbol(string_ref symbol);
   void replace_data(void*, std::size_t);
+  void update_header();
+
+  void set_vtable(void* object, vtable_object* new_vt);
 
 public:
   Image(std::size_t image_size);

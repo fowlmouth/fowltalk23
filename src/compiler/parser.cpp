@@ -75,7 +75,6 @@ bool Parser::parse_unary()
 {
   if(parse_terminal())
   {
-    std::cout << "current type= " << current_type() << " (" << token_type_to_string(current_type()) << ")" << std::endl;
     while(current_type() == Token::Identifier)
     {
       CHECK_CALLBACK(accept_send(tok.string, 1));

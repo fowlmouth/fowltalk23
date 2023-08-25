@@ -35,7 +35,7 @@ int MethodBuilder::immediate_unique_push(oop value)
 
 int MethodBuilder::intern(const char* symbol)
 {
-  oop val = image_->intern(symbol);
+  oop val = image_->offset(image_->intern(symbol));
   int index = immediate_unique_push(val);
   return index;
 }
@@ -91,9 +91,12 @@ void MethodBuilder::load_immediate_integer(intmax_t value)
   write_instruction(VMI_LoadImmediate, index);
 }
 
-void MethodBuilder::send_message(const char* selector, int arg_count)
+void MethodBuilder::send_message(std::string_view selector, int arg_count)
 {
-  int selector_index = intern(selector);
+  auto selector_copy = std::make_unique< char[] >(selector.size() + 1);
+  std::memcpy(selector_copy.get(), selector.data(), selector.size());
+  selector_copy[selector.size()] = 0;
+  int selector_index = intern(selector_copy.get());
   write_instruction(VMI_LoadImmediate, selector_index);
   write_instruction(VMI_Send, arg_count);
 }

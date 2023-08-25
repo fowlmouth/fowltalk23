@@ -13,6 +13,9 @@ int main(int argc, const char** argv)
     .on("--image", [&](std::string_view value){
       image_path = value;
     })
+    .on_argument([&](std::string_view value){
+      image_path = value;
+    })
     .parse(argc, argv);
 
   Image im(1 << 22);

@@ -1,21 +1,8 @@
 #include "mem.h"
 
-struct MemorySpaceHeader
+Memory::Memory(void* region_start, std::size_t region_size, image_offset_t next_alloc)
+: region_start(region_start), next_alloc(next_alloc), region_size(region_size)
 {
-  void* begin;
-  std::size_t size;
-  void* next_alloc;
-};
-
-Memory::Memory(void* region_start, std::size_t region_size)
-: region_start(region_start), region_size(region_size)
-{
-  MemorySpaceHeader* header = reinterpret_cast< MemorySpaceHeader* >(region_start);
-  next_alloc = reinterpret_cast< void* >(header + 1);
-  if(header->next_alloc)
-  {
-    next_alloc = header->next_alloc;
-  }
 }
 
 Memory::~Memory()
@@ -26,15 +13,15 @@ Memory::~Memory()
 
 void* Memory::alloc(vtable_object* vtable, std::size_t size)
 {
-  size = ALIGN8(size);
-  if(size < sizeof(void*))
+  size = ALIGN8(size+sizeof(oop));
+  if(size < sizeof(oop)*2)
   {
-    size = sizeof(void*);
+    size = sizeof(oop)*2;
   }
-  vtable_object** header = (vtable_object**)next_alloc;
-  next_alloc = (char*)next_alloc + sizeof(void*) + size;
-  *header = vtable;
-  return (oop)(header+1);
+  oop* header = (oop*)((char*)region_start + next_alloc);
+  next_alloc += size;
+  *header = offset(vtable);
+  return (void*)(header+1);
 }
 
 void* Memory::alloc_words(vtable_object* vtable, std::size_t words)
@@ -45,4 +32,14 @@ void* Memory::alloc_words(vtable_object* vtable, std::size_t words)
 void Memory::free(void* ptr)
 {
   (void)ptr;
+}
+
+image_offset_t Memory::offset(void* ptr) const
+{
+  return (image_offset_t)((char*)ptr - (char*)region_start);
+}
+
+void* Memory::ptr(image_offset_t offset) const
+{
+  return (char*)region_start + offset;
 }
