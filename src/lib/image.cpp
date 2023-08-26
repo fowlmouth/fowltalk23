@@ -1,16 +1,21 @@
 #include "image.h"
 
+#define FT_MAGIC 0xF00BA125
+#define FT_IMAGE_VERSION 0x00000100
+
 struct ImageHeader
 {
-  uint32_t region_size, flags;
-  uint64_t next_alloc;
+  uint32_t magic, version;
+  uint32_t region_size_bytes, flags;
+  uint64_t next_alloc, entrypoint, config_size_pairs;
+  uint32_t config[0];
 };
 
 Image::Image(std::size_t image_size)
 : Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, 0)
 {
   ImageHeader* header = (ImageHeader*)region_start;
-  header->region_size = image_size;
+  header->region_size_bytes = image_size;
   header->flags = 0;
   next_alloc = (image_offset_t)header->next_alloc;
   if(!next_alloc)
@@ -34,13 +39,17 @@ void Image::replace_data(void* data, std::size_t size)
 void Image::update_header()
 {
   ImageHeader* header = (ImageHeader*)region_start;
+  header->magic = FT_MAGIC;
+  header->version = FT_IMAGE_VERSION;
+  header->region_size_bytes = region_size;
+  header->flags = 0;
   header->next_alloc = (uint64_t)next_alloc;
+  header->config_size_pairs = 0;
 }
+
 
 void Image::load(const char* filename)
 {
-  (void)filename;
-
   FILE* fp = fopen(filename, "rw");
   if(!fp)
   {
@@ -48,19 +57,10 @@ void Image::load(const char* filename)
     return;
   }
 
-  ImageHeader header;
-  fread(&header, sizeof(header), 1, fp);
-
   // get the size
   fseek(fp, 0, SEEK_END);
   auto file_size = (uint32_t)ftell(fp);
   fseek(fp, 0, SEEK_SET);
-
-  if(file_size != header.region_size)
-  {
-    std::cerr << "region size mismatch, region size= " << header.region_size << " expected " << file_size << std::endl;
-    return;
-  }
 
   int file_id = fileno(fp);
   void* data = mmap(nullptr, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, file_id, 0);
@@ -69,6 +69,13 @@ void Image::load(const char* filename)
   if(!data)
   {
     std::cerr << "failed to mmap file" << std::endl;
+    return;
+  }
+
+  if(!validate_header(data, file_size))
+  {
+    munmap(data, file_size);
+    std::cerr << "invalid image" << std::endl;
     return;
   }
 
@@ -93,6 +100,18 @@ void Image::set_vtable(void* object, vtable_object* new_vt)
 {
   // *((void**)object - 1) = new_vt;
   ((object_array)object)[-1] = offset(new_vt);
+}
+
+bool Image::validate_header(void* region_ptr, std::size_t region_size_bytes) const
+{
+  auto header = (ImageHeader*)region_ptr;
+  if(header->region_size_bytes != region_size_bytes
+    || header->magic != FT_MAGIC
+    || header->version != FT_IMAGE_VERSION)
+  {
+    return false;
+  }
+  return true;
 }
 
 void Image::bootstrap()

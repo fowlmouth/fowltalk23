@@ -40,6 +40,8 @@ class Image : public Memory
 
   void set_vtable(void* object, vtable_object* new_vt);
 
+  bool validate_header(void* region_ptr, std::size_t region_size) const;
+
 public:
   Image(std::size_t image_size);
   ~Image();
