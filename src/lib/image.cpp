@@ -14,14 +14,8 @@ struct ImageHeader
 Image::Image(std::size_t image_size)
 : Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, 0)
 {
-  ImageHeader* header = (ImageHeader*)region_start;
-  header->region_size_bytes = image_size;
-  header->flags = 0;
-  next_alloc = (image_offset_t)header->next_alloc;
-  if(!next_alloc)
-  {
-    next_alloc = header->next_alloc = sizeof(ImageHeader);
-  }
+  next_alloc = sizeof(ImageHeader);
+  update_header();
 }
 
 Image::~Image()
