@@ -100,3 +100,33 @@ void MethodBuilder::send_message(std::string_view selector, int arg_count)
   write_instruction(VMI_LoadImmediate, selector_index);
   write_instruction(VMI_Send, arg_count);
 }
+
+oop MethodBuilder::as_method() const
+{
+  // build literals
+  object_array literals = (object_array)image_->alloc_words((vtable_object*)image_->ptr(image_->special_object(soid_arrayVt)), immediates.size());
+  std::memcpy(literals, immediates.data(), immediates.size() * sizeof(oop));
+
+  // build instructions
+  vm_instruction_t* instr = (vm_instruction_t*)image_->alloc((vtable_object*)image_->ptr(image_->special_object(soid_symbolVt)), instructions.size());
+  std::memcpy(instr, instructions.data(), instructions.size());
+
+  // build bytecode
+  object_array bytecode = (object_array)image_->alloc_words((vtable_object*)image_->ptr(image_->special_object(soid_arrayVt)), VMBS__count);
+  bytecode[VMBS_Instructions] = image_->offset(instr);
+  bytecode[VMBS_Immediates] = image_->offset(literals);
+
+  // build vtable
+  const int slot_count = arity;
+  auto vtable_vt = (vtable_object*)image_->ptr(image_->special_object(soid_vtableVt));
+  auto vt = vtable_object::make(slot_count, 0, vtable_vt, *image_);
+  for(int i = 0; i < arity; ++i)
+  {
+    vt->add_slot(*image_, variable_names.at(i).c_str(), vts_data, 0);
+  }
+
+  // instantiate method
+  auto method = image_->alloc_words(vt, slot_count);
+
+  return image_->offset(method);
+}

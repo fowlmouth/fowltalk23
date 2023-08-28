@@ -18,23 +18,9 @@ class Image : public Memory
 {
   object_array special_objects;
 
-  enum add_slot_result_t
-  {
-    asr_ok,
-    asr_error_slot_exists,
-    asr_error_invalid_type,
-    asr_error_reorder_parents,
-    asr_error_too_many_static_parents,
-    asr_error_too_many_slots
-  };
-  enum
-  {
-    asr__count = asr_error_too_many_slots + 1
-  };
-
+  using add_slot_result_t = vtable_object::add_slot_result_t;
   add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, void* value);
 
-  unsigned int hash_symbol(string_ref symbol);
   void replace_data(void*, std::size_t);
   void update_header();
 
@@ -49,7 +35,15 @@ public:
   void load(const char* filename);
   void save(const char* filename);
 
+  unsigned int hash_symbol(string_ref symbol);
+
   void bootstrap();
+
+  void add_entrypoint(oop method);
+
+  using EntrypointCallback = bool(*)(oop, void*);
+  // callback returns false to stop iteration
+  void each_entrypoint(EntrypointCallback callback, void* arg) const;
 
   string_ref intern(const char* symbol);
 

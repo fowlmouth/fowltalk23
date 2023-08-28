@@ -42,5 +42,6 @@ public:
   void load_immediate_integer(intmax_t value);
   void send_message(std::string_view selector, int arg_count);
 
+  oop as_method() const;
 };
 

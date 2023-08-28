@@ -1,4 +1,5 @@
 #include "vtable.h"
+#include "image.h"
 
 vtable_slot::vtable_slot(vtable_slot_flags flags, image_offset_t key, oop value)
 : key_flags((image_offset_t)((uintptr_t)key | ((uintptr_t)flags & vts__mask))), value_(value)
@@ -102,4 +103,87 @@ void* vtable_object::allocate_instance(Memory& mem)
   return result;
 }
 
+vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const char* slot_name, vtable_slot_flags flags, void* value_object)
+{
 
+  if(slot_count == slot_capacity)
+  {
+    return asr_error_too_many_slots;
+  }
+
+  flags = (vtable_slot_flags)(flags & vts__mask);
+
+  string_ref symbol = image.intern(slot_name);
+  oop symbol_offset = image.offset(symbol);
+  const unsigned int slot_mask = slot_capacity - 1;
+  auto hash = image.hash_symbol(symbol);
+  unsigned int index = hash & slot_mask;
+  vtable_slot* slot = slots_begin() + index;
+  while(! slot->empty())
+  {
+    if(slot->key() == symbol_offset)
+    {
+      return asr_error_slot_exists;
+    }
+    index = (index + 1) & slot_mask;
+    slot = slots_begin() + index;
+  }
+
+  oop value = image.offset(value_object);
+
+  switch(flags)
+  {
+  case vts_static_parent:
+  {
+    // static parent, validate vtable can fit more static parents
+    int static_parent_index = -1;
+    for(std::size_t i = 0; i < static_parent_count; ++i)
+    {
+      if(! static_parents_begin()[i])
+      {
+        static_parent_index = (int)i;
+        break;
+      }
+    }
+    if(static_parent_index == -1)
+    {
+      // no room for static parent
+      return asr_error_too_many_static_parents;
+    }
+    static_parents_begin()[ static_parent_index ] = value;
+    *slot = vtable_slot(flags, symbol_offset, int_to_oop(static_parent_index));
+
+  } break;
+
+  case vts_static:
+    // static data slot
+    *slot = vtable_slot(flags, symbol_offset, value);
+    break;
+
+  case vts_parent:
+
+    if(instance_size_words > parent_count)
+    {
+      // non-parent slots already defined, cannot define parent slot
+      return asr_error_reorder_parents;
+    }
+    ++parent_count;
+    // fall-through: these are normal parent slots
+
+  case vts_data:
+  {
+    // instance data slot
+    auto instance_index = instance_size_words ++;
+    *slot = vtable_slot(flags, symbol_offset, int_to_oop(instance_index));
+
+  } break;
+
+
+  default:
+    return asr_error_invalid_type;
+
+  }
+
+  ++ slot_count;
+  return asr_ok;
+}

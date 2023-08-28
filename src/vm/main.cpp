@@ -29,5 +29,14 @@ int main(int argc, const char** argv)
     im.bootstrap();
   }
 
+  oop entrypoint = 0;
+  im.each_entrypoint([](oop entrypoint, void* arg_){
+    oop* arg = (oop*)arg_;
+    *arg = entrypoint;
+    return false;
+  }, &entrypoint);
+
+  std::cout << "entrypoint= " << entrypoint << std::endl;
+
   return 0;
 }

@@ -153,6 +153,12 @@ int main(int argc, const char** argv)
     }
   }
 
+  oop method = method_context.as_method();
+  if(method)
+  {
+    image.add_entrypoint(method);
+  }
+
   if(mmap_data)
   {
     munmap(mmap_data, input_contents.size());

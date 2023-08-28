@@ -70,6 +70,24 @@ public:
 
   void* allocate_instance(Memory& mem);
 
+
+  enum add_slot_result_t
+  {
+    asr_ok,
+    asr_error_slot_exists,
+    asr_error_invalid_type,
+    asr_error_reorder_parents,
+    asr_error_too_many_static_parents,
+    asr_error_too_many_slots
+  };
+  enum
+  {
+    asr__count = asr_error_too_many_slots + 1
+  };
+
+  add_slot_result_t add_slot(Image&, const char* slot_name, vtable_slot_flags flags, void* value);
+
+
 };
 
 vtable_object* oop_vtable(oop o);
