@@ -85,7 +85,7 @@ std::size_t interpret_image_size(const std::string& str, std::size_t default_val
   {
     std::cerr << "size value '" << str << "' is out of range" << std::endl;
   }
-  return 0;
+  return default_value;
 }
 
 int main(int argc, const char** argv)
@@ -169,8 +169,7 @@ int main(int argc, const char** argv)
     p.parse_expression();
   }
 
-  std::size_t image_size_num = 1 << 22 ; // interpret_image_size(image_size, 1 << 20);
-  std::cout << "image size: " << image_size_num << " bytes" << std::endl;
+  std::size_t image_size_num = interpret_image_size(image_size, 1 << 20);
   Image image(image_size_num);
   image.bootstrap();
 
@@ -214,7 +213,6 @@ int main(int argc, const char** argv)
 
   if(!output_path.empty())
   {
-    std::cerr << "saving to '" << output_path << "'" << std::endl;
     image.save(output_path.c_str());
   }
 

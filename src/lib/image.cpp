@@ -22,7 +22,7 @@ enum ImageConfigOption
 };
 
 Image::Image(std::size_t image_size)
-: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), 0, 0)
+: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, 0)
 {
   int config_capacity = 16;
   next_alloc = sizeof(ImageHeader) + sizeof(uint32_t[2]) * config_capacity;
@@ -132,7 +132,6 @@ void Image::add_entrypoint(oop method)
   auto& pair = header->config[ header->config_size_pairs++ ];
   pair[0] = ICO_Entrypoint;
   pair[1] = (uint32_t)method;
-  std::cout << "write entrypoint " << method << std::endl;
 }
 
 void Image::each_entrypoint(Image::EntrypointCallback callback, void* arg) const
@@ -185,6 +184,10 @@ Image::ImageLoadResult Image::load(const char* filename)
 
 void Image::save(const char* filename)
 {
+  if(!region_size)
+  {
+    throw TODO{};
+  }
   FILE* fp = fopen(filename, "w+");
   if(!fp)
   {
@@ -195,7 +198,7 @@ void Image::save(const char* filename)
   update_header();
   if(fwrite(region_start, region_size, 1, fp) != 1)
   {
-    std::cerr << "failed to write image to file, feof= " << feof(fp) << ", ferror= " << ferror(fp) << std::endl;
+    std::cerr << "failed to write image to file, size= " << region_size << ", feof= " << feof(fp) << ", ferror= " << ferror(fp) << std::endl;
   }
   fclose(fp);
 }
