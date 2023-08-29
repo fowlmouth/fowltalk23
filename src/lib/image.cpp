@@ -22,7 +22,7 @@ enum ImageConfigOption
 };
 
 Image::Image(std::size_t image_size)
-: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), image_size, 0)
+: Memory(mmap(nullptr, image_size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0), 0, 0)
 {
   int config_capacity = 16;
   next_alloc = sizeof(ImageHeader) + sizeof(uint32_t[2]) * config_capacity;
@@ -33,6 +33,22 @@ Image::Image(std::size_t image_size)
   header->config[0][0] = ICO_EndOfConfig;
 
   update_header();
+}
+
+Image::Image(const char* path)
+: Memory(nullptr, 0, 0)
+{
+  switch(load(path))
+  {
+  case ILR_OK:
+    break;
+  case ILR_ErrorOpeningFile:
+    throw std::runtime_error("Could not open image file");
+  case ILR_ErrorMMapFailed:
+    throw std::runtime_error("Could not map image file");
+  case ILR_ErrorFileSizeMismatch:
+    throw std::runtime_error("Image file has invalid region size");
+  }
 }
 
 Image::~Image()
@@ -136,38 +152,35 @@ void Image::each_entrypoint(Image::EntrypointCallback callback, void* arg) const
 }
 
 
-void Image::load(const char* filename)
+Image::ImageLoadResult Image::load(const char* filename)
 {
-  FILE* fp = fopen(filename, "rw");
+  FILE* fp = fopen(filename, "r+");
   if(!fp)
   {
-    std::cerr << "failed to open file for reading '" << filename << "'" << std::endl;
-    return;
+    return ILR_ErrorOpeningFile;
   }
 
   // get the size
   fseek(fp, 0, SEEK_END);
-  auto file_size = (uint32_t)ftell(fp);
+  auto file_size = (std::size_t)ftell(fp);
   fseek(fp, 0, SEEK_SET);
 
-  int file_id = fileno(fp);
-  void* data = mmap(nullptr, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, file_id, 0);
+  void* data = mmap(nullptr, file_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fileno(fp), 0);
   fclose(fp);
 
-  if(!data)
+  if(data == MAP_FAILED)
   {
-    std::cerr << "failed to mmap file" << std::endl;
-    return;
+    return ILR_ErrorMMapFailed;
   }
 
   if(!validate_header(data, file_size))
   {
     munmap(data, file_size);
-    std::cerr << "invalid image" << std::endl;
-    return;
+    return ILR_ErrorFileSizeMismatch;
   }
 
   replace_data(data, file_size);
+  return ILR_OK;
 }
 
 void Image::save(const char* filename)
@@ -175,12 +188,15 @@ void Image::save(const char* filename)
   FILE* fp = fopen(filename, "w+");
   if(!fp)
   {
-    std::cerr << "failed to open file for writing '" << filename << "'" << std::endl;
+    std::cerr << "failed to open file for writing '" << filename << "' err= '" << strerror(errno) << "'" << std::endl;
     return;
   }
 
   update_header();
-  fwrite(region_start, region_size, 1, fp);
+  if(fwrite(region_start, region_size, 1, fp) != 1)
+  {
+    std::cerr << "failed to write image to file, feof= " << feof(fp) << ", ferror= " << ferror(fp) << std::endl;
+  }
   fclose(fp);
 }
 

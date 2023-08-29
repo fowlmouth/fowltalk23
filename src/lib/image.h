@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "primitives.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <cstdint>
 #include <iostream>
@@ -30,9 +31,22 @@ class Image : public Memory
 
 public:
   Image(std::size_t image_size);
+  Image(const char* path);
   ~Image();
 
-  void load(const char* filename);
+  enum ImageLoadResult
+  {
+    ILR_OK,
+    ILR_ErrorOpeningFile,
+    ILR_ErrorMMapFailed,
+    ILR_ErrorFileSizeMismatch
+  };
+  enum
+  {
+    ILR__count = ILR_ErrorFileSizeMismatch + 1
+  };
+
+  ImageLoadResult load(const char* filename);
   void save(const char* filename);
 
   unsigned int hash_symbol(string_ref symbol);

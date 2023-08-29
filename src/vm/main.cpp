@@ -18,16 +18,9 @@ int main(int argc, const char** argv)
     })
     .parse(argc, argv);
 
-  Image im(1 << 22);
-  if(!image_path.empty())
+  try
   {
-    im.load(image_path.c_str());
-  }
-  else
-  {
-    // ???
-    im.bootstrap();
-  }
+    Image im(image_path.c_str());
 
   oop entrypoint = 0;
   im.each_entrypoint([](oop entrypoint, void* arg_){
@@ -35,8 +28,29 @@ int main(int argc, const char** argv)
     *arg = entrypoint;
     return false;
   }, &entrypoint);
-
   std::cout << "entrypoint= " << entrypoint << std::endl;
+
+
+  }
+  catch(const std::runtime_error& err)
+  {
+    std::cerr << "strerr: " << strerror(errno) << std::endl;
+    switch(errno)
+    {
+    case EACCES:
+      std::cerr << "Permission denied" << std::endl;
+      break;
+    case EBADF:
+      std::cerr << "Bad file descriptor" << std::endl;
+      break;
+    case EINVAL:
+      std::cerr << "Invalid argument" << std::endl;
+      break;
+    default:
+      std::cerr << "other error " << errno << std::endl;
+      break;
+    }
+  }
 
   return 0;
 }

@@ -46,12 +46,55 @@ bool EventPrinter::accept_send(std::string_view selector, int arity)
 }
 
 
+
+std::size_t interpret_image_size(const std::string& str, std::size_t default_value)
+{
+  if(str.empty())
+  {
+    return default_value;
+  }
+  std::size_t num = default_value;
+  try
+  {
+    num = std::stol(str);
+    switch(str.back())
+    {
+    case 'g': case 'G':
+      num *= 1024 * 1024 * 1024;
+      break;
+
+    case 'm': case 'M':
+      num *= 1024 * 1024;
+      break;
+
+    case 'k': case 'K':
+      num *= 1024;
+      break;
+
+    case 'b':
+    default:
+      break;
+    }
+    return num;
+  }
+  catch(const std::invalid_argument& )
+  {
+    std::cerr << "invalid size value '" << str << "'" << std::endl;
+  }
+  catch(const std::out_of_range& )
+  {
+    std::cerr << "size value '" << str << "' is out of range" << std::endl;
+  }
+  return 0;
+}
+
 int main(int argc, const char** argv)
 {
   bool lexer_debug = false, parser_debug = false,
     compiler_debug = false;
   std::string input_path, output_path;
   std::string_view input_contents;
+  std::string image_size = "1m";
 
   CLI cli;
   cli
@@ -73,6 +116,9 @@ int main(int argc, const char** argv)
     .on("--output", [&](std::string_view arg){
       output_path = arg;
     })
+    .on("--size", [&](std::string_view arg){
+      image_size = arg;
+    })
     .on_argument([&](std::string_view arg){
       input_path = arg;
     })
@@ -93,7 +139,7 @@ int main(int argc, const char** argv)
     fseek(input_file, 0, SEEK_SET);
     mmap_data = mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fileid, 0);
     fclose(input_file);
-    if(!mmap_data)
+    if(mmap_data == MAP_FAILED)
     {
       std::cerr << "failed to mmap file '" << input_path << '"' << std::endl;
       return 1;
@@ -123,7 +169,9 @@ int main(int argc, const char** argv)
     p.parse_expression();
   }
 
-  Image image(1 << 22);
+  std::size_t image_size_num = 1 << 22 ; // interpret_image_size(image_size, 1 << 20);
+  std::cout << "image size: " << image_size_num << " bytes" << std::endl;
+  Image image(image_size_num);
   image.bootstrap();
 
   MethodBuilder method_context(image);
@@ -166,6 +214,7 @@ int main(int argc, const char** argv)
 
   if(!output_path.empty())
   {
+    std::cerr << "saving to '" << output_path << "'" << std::endl;
     image.save(output_path.c_str());
   }
 
