@@ -56,6 +56,9 @@ private:
   // the size of the instance in words
   size_t instance_size_words;
 
+  // activatable bytecode object, if this is a method frame
+  oop bytecode_;
+
 public:
   // next is array of slots
   vtable_slot* slots_begin();
@@ -70,6 +73,8 @@ public:
 
   void* allocate_instance(Memory& mem);
 
+  oop bytecode() const;
+  void set_bytecode(oop new_bytecode);
 
   enum add_slot_result_t
   {

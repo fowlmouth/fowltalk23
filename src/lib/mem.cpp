@@ -43,3 +43,8 @@ void* Memory::ptr(image_offset_t offset) const
 {
   return (char*)region_start + offset;
 }
+
+vtable_object* Memory::vtable(image_offset_t offset) const
+{
+  return (vtable_object*)ptr(((object_array)ptr(offset))[-1]);
+}

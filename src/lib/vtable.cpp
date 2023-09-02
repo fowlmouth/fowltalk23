@@ -78,6 +78,7 @@ vtable_object* vtable_object::make(std::size_t slot_count, std::size_t static_pa
   vtable->static_parent_count = static_parent_count;
   vtable->parent_count = 0;
   vtable->instance_size_words = 0;
+  vtable->bytecode_ = 0;
 
   return vtable;
 }
@@ -101,6 +102,16 @@ void* vtable_object::allocate_instance(Memory& mem)
 {
   void* result = mem.alloc(this, instance_size_words * sizeof(oop));
   return result;
+}
+
+oop vtable_object::bytecode() const
+{
+  return bytecode_;
+}
+
+void vtable_object::set_bytecode(oop new_bytecode)
+{
+  bytecode_ = new_bytecode;
 }
 
 vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const char* slot_name, vtable_slot_flags flags, void* value_object)

@@ -29,5 +29,6 @@ public:
 
   image_offset_t offset(void* ptr) const;
   void* ptr(image_offset_t offset) const;
+  vtable_object* vtable(image_offset_t offset) const;
 
 };
