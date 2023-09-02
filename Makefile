@@ -21,9 +21,11 @@ compiler: src/compiler/compiler libfowl.so
 src/compiler/compiler: $(wildcard src/compiler/*.cpp)
 	$(MAKE) -C src/compiler
 
+test.img: compiler libfowl.so
+	./compiler --file test/infix_message --output test.img
 
 clean:
-	rm -f vm libfowl.so compiler
+	rm -f vm libfowl.so compiler test.img
 
 cleanall: clean
 	$(MAKE) -C src/vm clean

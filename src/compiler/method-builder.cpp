@@ -116,9 +116,6 @@ oop MethodBuilder::as_method() const
   bytecode[VMBS_Instructions] = image_->offset(instr);
   bytecode[VMBS_Immediates] = image_->offset(literals);
 
-  std::cerr << "write method instr= " << image_->offset(instr) << std::endl
-    << " immediates= " << image_->offset(literals) << std::endl;
-
   // build vtable
   const int slot_count = arity;
   auto vtable_vt = (vtable_object*)image_->ptr(image_->special_object(soid_vtableVt));
