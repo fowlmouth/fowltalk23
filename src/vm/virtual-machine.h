@@ -39,6 +39,7 @@ protected:
 
 public:
   VirtualMachine(Memory& mem, oop entrypoint_method);
+  bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
 
 };

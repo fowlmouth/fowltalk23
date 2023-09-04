@@ -44,12 +44,22 @@ VirtualMachine::VirtualMachine(Memory& mem, oop entrypoint_method)
   frames(std::make_unique< ExecutionContext[] >(64)),
   stack_capacity(128),
   stack(std::make_unique< oop[] >(128)),
-  ip(nullptr)
+  ip(nullptr), immediates(nullptr)
 {
+  sp = stack.get();
   auto fr = fp();
   fr->sp = fr->ip = 0;
   fr->method = entrypoint_method;
   entered_frame();
+}
+
+bool VirtualMachine::lookup(oop receiver, oop selector, oop& result) const
+{
+  (void)receiver;
+  (void)selector;
+  (void)result;
+
+  return false;
 }
 
 void VirtualMachine::run(int ticks)
@@ -70,11 +80,24 @@ void VirtualMachine::run(int ticks)
 
     case VMI_LoadImmediate:
       std::cout << "[load_immediate arg=" << arg << " ]" << std::endl;
+      *sp++ = immediates[arg];
       break;
 
     case VMI_Send:
+    {
       std::cout << "[send arg=" << arg << " ]" << std::endl;
+      std::cout << "  selector= '" << (string_ref)mem.ptr(*(sp-1)) << "'" << std::endl;
+      oop result;
+      if(lookup(*(sp-(1+arg)), *(sp-1), result))
+      {
+        std::cout << "  found oop= " << result << std::endl;
+      }
+      else
+      {
+        std::cout << "  not found" << std::endl;
+      }
       break;
+    }
 
     case VMI_Return:
       std::cout << "[return arg=" << arg << " ]" << std::endl;
