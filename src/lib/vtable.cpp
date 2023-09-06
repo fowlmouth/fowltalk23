@@ -83,11 +83,6 @@ vtable_object* vtable_object::make(std::size_t slot_count, std::size_t static_pa
   return vtable;
 }
 
-vtable_object* oop_vtable(oop o)
-{
-  return (vtable_object*)*((void**)o - 1);
-}
-
 oop object_vtable(void* object)
 {
   return ((oop*)object)[-1];
@@ -96,6 +91,18 @@ oop object_vtable(void* object)
 vtable_object* object_vtable(void* object, Memory& memory)
 {
   return (vtable_object*)memory.ptr(object_vtable(object));
+}
+
+vtable_object* oop_vtable(oop object, Image& image)
+{
+  if(oop_is_int(object))
+  {
+    return (vtable_object*)image.ptr(image.special_object(soid_integerVt));
+  }
+  else
+  {
+    return (vtable_object*)image.ptr(object_vtable(image.ptr(object)));
+  }
 }
 
 void* vtable_object::allocate_instance(Memory& mem)
@@ -197,4 +204,22 @@ vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const cha
 
   ++ slot_count;
   return asr_ok;
+}
+
+bool vtable_object::lookup(string_ref selector, oop& result) const
+{
+  (void)selector;
+  (void)result;
+
+  return false;
+}
+
+bool vtable_object::recursive_lookup(string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const
+{
+  (void)selector;
+  (void)result;
+  (void)owner;
+  (void)slot_flags;
+
+  return false;
 }

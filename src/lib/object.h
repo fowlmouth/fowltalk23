@@ -5,6 +5,8 @@ using oop = uintptr_t;
 
 using object_array = oop*;
 
+using object_slots = oop*;
+
 // ptr array of ptr void
 
 // void *(*foo[]);

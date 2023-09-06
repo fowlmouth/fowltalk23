@@ -5,8 +5,8 @@ void VirtualMachine::enter_method(oop method)
   (void)method;
   // write locals to the current frame
   auto fr = fp();
-  object_array bytecode_slots = fr->bytecode_slots(mem);
-  fr->ip = ip - (vm_instruction_t*)mem.ptr(bytecode_slots[VMBS_Instructions]);
+  object_array bytecode_slots = fr->bytecode_slots(image);
+  fr->ip = ip - (vm_instruction_t*)image.ptr(bytecode_slots[VMBS_Instructions]);
   fr->sp = sp - stack.get();
 
   // push new frame
@@ -32,14 +32,14 @@ VirtualMachine::ExecutionContext* VirtualMachine::fp() const
 void VirtualMachine::entered_frame()
 {
   auto fr = fp();
-  object_array bytecode_slots = fr->bytecode_slots(mem);
-  ip = (vm_instruction_t*)mem.ptr(bytecode_slots[VMBS_Instructions]) + fr->ip;
+  object_array bytecode_slots = fr->bytecode_slots(image);
+  ip = (vm_instruction_t*)image.ptr(bytecode_slots[VMBS_Instructions]) + fr->ip;
   sp = stack.get() + fr->sp;
-  immediates = (object_array)mem.ptr(bytecode_slots[VMBS_Immediates]);
+  immediates = (object_array)image.ptr(bytecode_slots[VMBS_Immediates]);
 }
 
-VirtualMachine::VirtualMachine(Memory& mem, oop entrypoint_method)
-: mem(mem),
+VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
+: image(image),
   frame_ptr(0), frame_capacity(64),
   frames(std::make_unique< ExecutionContext[] >(64)),
   stack_capacity(128),
@@ -55,9 +55,13 @@ VirtualMachine::VirtualMachine(Memory& mem, oop entrypoint_method)
 
 bool VirtualMachine::lookup(oop receiver, oop selector, oop& result) const
 {
-  (void)receiver;
+  auto vt = oop_vtable(receiver, image);
+  (void)vt;
+
   (void)selector;
   (void)result;
+
+  result = 0;
 
   return false;
 }
@@ -86,7 +90,8 @@ void VirtualMachine::run(int ticks)
     case VMI_Send:
     {
       std::cout << "[send arg=" << arg << " ]" << std::endl;
-      std::cout << "  selector= '" << (string_ref)mem.ptr(*(sp-1)) << "'" << std::endl;
+      std::cout << "  selector= '" << (string_ref)image.ptr(*(sp-1)) << "'" << std::endl;
+      std::cout << "  receiver oop= " << *(sp-(1+arg)) << std::endl;
       oop result;
       if(lookup(*(sp-(1+arg)), *(sp-1), result))
       {

@@ -1,4 +1,5 @@
 #include "image.h"
+#include "vm_spec.h"
 
 #define FT_MAGIC 0xF00BA125
 #define FT_IMAGE_VERSION 0x00000100
@@ -256,6 +257,9 @@ void Image::bootstrap()
   special_objects[soid_lobby] = offset(lobby);
   special_objects[soid_arrayVt] = offset(array_primitive_vt);
 
+  vtable_object* integer_vt = vtable_object::make(64, 1, vtable_vt, *this);
+  special_objects[soid_integerVt] = offset(integer_vt);
+
   vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
   void* globals = alloc(globals_vt, 0);
 
@@ -265,6 +269,7 @@ void Image::bootstrap()
   add_slot(globals_vt, "VTableVT", vts_static, vtable_vt);
   add_slot(globals_vt, "PrimitiveArrayVT", vts_static, array_primitive_vt);
   add_slot(globals_vt, "PrimitiveStringVT", vts_static, string_primitive_vt);
+  add_slot(globals_vt, "IntegerVT", vts_static, integer_vt);
 
   // add typeName slots
   add_slot(vtable_vt, "typeName", vts_static, intern("VTable"));
@@ -272,6 +277,28 @@ void Image::bootstrap()
   add_slot(array_primitive_vt, "typeName", vts_static, intern("Array"));
   add_slot(lobby_vt, "typeName", vts_static, intern("Lobby"));
   add_slot(globals_vt, "typeName", vts_static, intern("Globals"));
+  add_slot(integer_vt, "typeName", vts_static, intern("Integer"));
+
+  // base methods
+  vtable_object* primitive_method_vt = vtable_object::make(64, 0, vtable_vt, *this);
+  add_slot(primitive_method_vt, "typeName", vts_static, intern("PrimitiveMethod"));
+
+  auto make_prim_method = [&](primitive_id_t prim)
+  {
+    object_slots bytecode_obj = (object_slots)alloc_words(primitive_method_vt, VMBS__count);
+    bytecode_obj[VMBS_PrimitiveProxyIndex] = int_to_oop(prim);
+
+    vtable_object* method_vt = vtable_object::make(4, 0, vtable_vt, *this);
+    method_vt->set_bytecode(offset(bytecode_obj));
+
+    return method_vt->allocate_instance(*this);
+  };
+
+  // integerVt
+  {
+    void* integer_plus_ = make_prim_method(pid_Integer_plus_);
+    add_slot(integer_vt, "+", vts_static, integer_plus_);
+  }
 }
 
 inline unsigned int djb2(const char* str)

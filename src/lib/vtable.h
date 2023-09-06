@@ -16,6 +16,11 @@ enum vtable_slot_flags
   vts_static_parent = vts_static | vts_parent,
   vts_data = 0,
 
+  // these combinations are not supported
+  vts_invalid1 = vts_static | vts_setter,              // static slot setters could be implemented sometime in the future
+  vts_invalid2 = vts_parent | vts_static | vts_setter, // static parents should remain const, not settable IMO
+  vts_invalid3 = vts_parent | vts_setter,              // pointless, would be no different than data slot setter
+
   vts__bit_count = 3,
   vts__mask = (1 << vts__bit_count) - 1
 };
@@ -92,9 +97,10 @@ public:
 
   add_slot_result_t add_slot(Image&, const char* slot_name, vtable_slot_flags flags, void* value);
 
-
+  bool lookup(string_ref symbol, oop& result) const;
+  bool recursive_lookup(string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const;
 };
 
-vtable_object* oop_vtable(oop o);
 oop object_vtable(void* object);
 vtable_object* object_vtable(void* object, Memory& memory);
+vtable_object* oop_vtable(oop object, Image& image);

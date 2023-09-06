@@ -17,7 +17,7 @@ enum VMInstruction
 
 enum VMBytecodeSlots
 {
-  VMBS_Instructions, VMBS_Immediates,
+  VMBS_Instructions, VMBS_Immediates, VMBS_PrimitiveProxyIndex,
 
   VMBS__count
 };

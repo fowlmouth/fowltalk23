@@ -21,7 +21,7 @@ class VirtualMachine
     }
   };
 
-  Memory& mem;
+  Image& image;
   int frame_ptr, frame_capacity;
   std::unique_ptr< ExecutionContext[] > frames;
 
@@ -38,7 +38,7 @@ protected:
   void entered_frame();
 
 public:
-  VirtualMachine(Memory& mem, oop entrypoint_method);
+  VirtualMachine(Image& image, oop entrypoint_method);
   bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
 
