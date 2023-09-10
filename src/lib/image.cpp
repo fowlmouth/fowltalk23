@@ -263,25 +263,25 @@ void Image::bootstrap()
   vtable_object* globals_vt = vtable_object::make(128, 0, vtable_vt, *this);
   void* globals = alloc(globals_vt, 0);
 
-  add_slot(lobby_vt, "Globals", vts_static_parent, globals);
+  add_slot(lobby_vt, "Globals", vts_static_parent, offset(globals));
 
-  add_slot(globals_vt, "Lobby", vts_static, lobby);
-  add_slot(globals_vt, "VTableVT", vts_static, vtable_vt);
-  add_slot(globals_vt, "PrimitiveArrayVT", vts_static, array_primitive_vt);
-  add_slot(globals_vt, "PrimitiveStringVT", vts_static, string_primitive_vt);
-  add_slot(globals_vt, "IntegerVT", vts_static, integer_vt);
+  add_slot(globals_vt, "Lobby", vts_static, offset(lobby));
+  add_slot(globals_vt, "VTableVT", vts_static, offset(vtable_vt));
+  add_slot(globals_vt, "PrimitiveArrayVT", vts_static, offset(array_primitive_vt));
+  add_slot(globals_vt, "PrimitiveStringVT", vts_static, offset(string_primitive_vt));
+  add_slot(globals_vt, "IntegerVT", vts_static, offset(integer_vt));
 
   // add typeName slots
-  add_slot(vtable_vt, "typeName", vts_static, intern("VTable"));
-  add_slot(string_primitive_vt, "typeName", vts_static, intern("String"));
-  add_slot(array_primitive_vt, "typeName", vts_static, intern("Array"));
-  add_slot(lobby_vt, "typeName", vts_static, intern("Lobby"));
-  add_slot(globals_vt, "typeName", vts_static, intern("Globals"));
-  add_slot(integer_vt, "typeName", vts_static, intern("Integer"));
+  add_slot(vtable_vt, "typeName", vts_static, offset(intern("VTable")));
+  add_slot(string_primitive_vt, "typeName", vts_static, offset(intern("String")));
+  add_slot(array_primitive_vt, "typeName", vts_static, offset(intern("Array")));
+  add_slot(lobby_vt, "typeName", vts_static, offset(intern("Lobby")));
+  add_slot(globals_vt, "typeName", vts_static, offset(intern("Globals")));
+  add_slot(integer_vt, "typeName", vts_static, offset(intern("Integer")));
 
   // base methods
   vtable_object* primitive_method_vt = vtable_object::make(64, 0, vtable_vt, *this);
-  add_slot(primitive_method_vt, "typeName", vts_static, intern("PrimitiveMethod"));
+  add_slot(primitive_method_vt, "typeName", vts_static, offset(intern("PrimitiveMethod")));
 
   auto make_prim_method = [&](primitive_id_t prim)
   {
@@ -297,7 +297,7 @@ void Image::bootstrap()
   // integerVt
   {
     void* integer_plus_ = make_prim_method(pid_Integer_plus_);
-    add_slot(integer_vt, "+", vts_static, integer_plus_);
+    add_slot(integer_vt, "+", vts_static, offset(integer_plus_));
   }
 }
 
@@ -316,9 +316,9 @@ unsigned int Image::hash_symbol(string_ref symbol)
   return djb2((const char*)symbol);
 }
 
-Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, void* value_object)
+Image::add_slot_result_t Image::add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, oop value)
 {
-  return vtable->add_slot(*this, slot_name, flags, value_object);
+  return vtable->add_slot(*this, slot_name, flags, value);
 }
 
 string_ref Image::intern(const char* symbol)

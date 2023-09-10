@@ -121,7 +121,7 @@ void vtable_object::set_bytecode(oop new_bytecode)
   bytecode_ = new_bytecode;
 }
 
-vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const char* slot_name, vtable_slot_flags flags, void* value_object)
+vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const char* slot_name, vtable_slot_flags flags, oop value)
 {
 
   if(slot_count == slot_capacity)
@@ -146,8 +146,6 @@ vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const cha
     index = (index + 1) & slot_mask;
     slot = slots_begin() + index;
   }
-
-  oop value = image.offset(value_object);
 
   switch(flags)
   {

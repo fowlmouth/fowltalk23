@@ -20,7 +20,7 @@ class Image : public Memory
   object_array special_objects;
 
   using add_slot_result_t = vtable_object::add_slot_result_t;
-  add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, void* value);
+  add_slot_result_t add_slot(vtable_object* vtable, const char* slot_name, vtable_slot_flags flags, oop value);
 
   void replace_data(void*, std::size_t);
   void update_header();
