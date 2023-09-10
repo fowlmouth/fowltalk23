@@ -2,6 +2,7 @@
 #include "cli.h"
 
 #include "virtual-machine.h"
+#include "vm-primitives.h"
 
 #include <string>
 
@@ -30,6 +31,7 @@ int main(int argc, const char** argv)
   std::cout << "entrypoint= " << entrypoint << std::endl;
 
   VirtualMachine vm(im, entrypoint);
+  load_default_primitives(vm);
   vm.run();
 
   return 0;

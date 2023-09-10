@@ -2,6 +2,7 @@
 
 #include "libfowl.h"
 #include "vm_spec.h"
+#include "vm-primitives.h"
 
 class VirtualMachine
 {
@@ -22,6 +23,10 @@ class VirtualMachine
   };
 
   Image& image;
+
+  int primitive_count, primitive_capacity;
+  std::unique_ptr< PrimitiveFunction[] > primitive_functions;
+
   int frame_ptr, frame_capacity;
   std::unique_ptr< ExecutionContext[] > frames;
 
@@ -41,5 +46,7 @@ public:
   VirtualMachine(Image& image, oop entrypoint_method);
   bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
+
+  void register_primitive( PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name);
 
 };

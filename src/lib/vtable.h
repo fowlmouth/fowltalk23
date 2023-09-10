@@ -95,6 +95,7 @@ public:
     asr__count = asr_error_too_many_slots + 1
   };
 
+  // TOOD: change value to oop
   add_slot_result_t add_slot(Image&, const char* slot_name, vtable_slot_flags flags, void* value);
 
   bool lookup(string_ref symbol, oop& result) const;

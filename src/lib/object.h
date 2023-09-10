@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 using image_offset_t = uintptr_t;
 using oop = uintptr_t;
 

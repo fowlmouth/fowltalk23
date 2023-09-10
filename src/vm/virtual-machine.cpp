@@ -40,6 +40,8 @@ void VirtualMachine::entered_frame()
 
 VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
 : image(image),
+  primitive_count(0), primitive_capacity(64),
+  primitive_functions(std::make_unique< PrimitiveFunction[] >(64)),
   frame_ptr(0), frame_capacity(64),
   frames(std::make_unique< ExecutionContext[] >(64)),
   stack_capacity(128),
@@ -118,4 +120,24 @@ void VirtualMachine::run(int ticks)
     }
     arg = 0;
   }
+}
+
+void VirtualMachine::register_primitive( PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name)
+{
+  oop primitiveMap = image.special_object(soid_primitiveMap);
+  vtable_object* primitiveMapVT = oop_vtable(primitiveMap, image);
+
+  int id = primitive_count++;
+  if(id == primitive_capacity)
+  {
+    primitive_capacity *= 2;
+    if(!primitive_capacity)
+      primitive_capacity = 8;
+    auto tmp = std::make_unique< PrimitiveFunction[] >(primitive_capacity);
+    std::copy(primitive_functions.get(), primitive_functions.get() + primitive_count, tmp.get());
+    primitive_functions = std::move(tmp);
+  }
+
+  primitiveMapVT->add_slot(image, selector, vts_static, int_to_oop(id));
+  primitive_functions[id] = {fn, dylib, symbol_name};
 }

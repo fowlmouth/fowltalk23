@@ -59,6 +59,7 @@ public:
   // callback returns false to stop iteration
   void each_entrypoint(EntrypointCallback callback, void* arg) const;
 
+  // TODO return oop
   string_ref intern(const char* symbol);
 
   oop special_object(std::size_t index) const;
