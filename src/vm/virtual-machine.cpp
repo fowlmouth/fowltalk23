@@ -58,13 +58,14 @@ VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
 bool VirtualMachine::lookup(oop receiver, oop selector, oop& result) const
 {
   auto vt = oop_vtable(receiver, image);
-  (void)vt;
-
-  (void)selector;
-  (void)result;
+  string_ref selector_sym = (string_ref)image.ptr(selector);
+  std::cout << "** lookup selector='" << selector_sym << "'" << std::endl;
+  if(vt->lookup(image, image.ptr(receiver), selector_sym, result))
+  {
+    return true;
+  }
 
   result = 0;
-
   return false;
 }
 

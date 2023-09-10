@@ -69,9 +69,15 @@ public:
   vtable_slot* slots_begin();
   vtable_slot* slots_end();
 
+  const vtable_slot* slots_begin() const;
+  const vtable_slot* slots_end() const;
+
   // followed by the array of static parents
   oop* static_parents_begin();
   oop* static_parents_end();
+
+  const oop* static_parents_begin() const;
+  const oop* static_parents_end() const;
 
   static std::size_t calculate_vtable_size(std::size_t slot_capacity, std::size_t static_parent_count);
   static vtable_object* make(std::size_t slot_count, std::size_t static_parent_count, vtable_object* vtable_vt, Memory& mem);
@@ -97,8 +103,8 @@ public:
 
   add_slot_result_t add_slot(Image&, const char* slot_name, vtable_slot_flags flags, oop value);
 
-  bool lookup(string_ref symbol, oop& result) const;
-  bool recursive_lookup(string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const;
+  bool lookup(Image& image, void* instance, string_ref symbol, oop& result) const;
+  bool recursive_lookup(Image& image, void* instance, string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const;
 };
 
 oop object_vtable(void* object);

@@ -34,6 +34,16 @@ vtable_slot* vtable_object::slots_end()
   return slots_begin() + slot_capacity;
 }
 
+const vtable_slot* vtable_object::slots_begin() const
+{
+  return reinterpret_cast< const vtable_slot* >(this + 1);
+}
+const vtable_slot* vtable_object::slots_end() const
+{
+  return slots_begin() + slot_capacity;
+}
+
+
 // followed by the array of static parents
 oop* vtable_object::static_parents_begin()
 {
@@ -44,6 +54,14 @@ oop* vtable_object::static_parents_end()
   return static_parents_begin() + static_parent_count;
 }
 
+const oop* vtable_object::static_parents_begin() const
+{
+  return (const oop*)slots_end();
+}
+const oop* vtable_object::static_parents_end() const
+{
+  return static_parents_begin() + static_parent_count;
+}
 
 
 
@@ -204,16 +222,61 @@ vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const cha
   return asr_ok;
 }
 
-bool vtable_object::lookup(string_ref selector, oop& result) const
+bool vtable_object::lookup(Image& image, void* instance,
+  string_ref selector, oop& result) const
 {
-  (void)selector;
-  (void)result;
+  oop symbol_offset = image.offset(selector);
+  const unsigned int slot_mask = slot_capacity - 1;
+  auto hash = image.hash_symbol(selector);
+  unsigned int index = hash & slot_mask;
+  const vtable_slot* slot = slots_begin() + index;
+  while(! slot->empty())
+  {
+    if(slot->key() == symbol_offset)
+    {
+      break;
+    }
+    index = (index + 1) & slot_mask;
+    slot = slots_begin() + index;
+  }
 
-  return false;
+  if(slot->empty())
+  {
+    return false;
+  }
+  switch(slot->flags())
+  {
+  case vts_data:
+  case vts_parent:
+    result = ((oop*)instance)[ oop_to_int(slot->value()) ];
+    break;
+
+  case vts_static:
+    result = slot->value();
+    break;
+
+  case vts_static_parent:
+  {
+    int static_parent_index = oop_to_int(slot->value());
+    result = static_parents_begin()[ static_parent_index ];
+  } break;
+
+  case vts_setter:
+    // TODO
+  default:
+    result = 0;
+    break;
+
+  }
+  return true;
 }
 
-bool vtable_object::recursive_lookup(string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const
+bool vtable_object::recursive_lookup(Image& image, void* instance,
+  string_ref selector, oop& result,
+  oop* owner, vtable_slot_flags* slot_flags) const
 {
+  (void)image;
+  (void)instance;
   (void)selector;
   (void)result;
   (void)owner;
