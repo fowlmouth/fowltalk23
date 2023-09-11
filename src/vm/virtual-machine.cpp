@@ -38,6 +38,27 @@ void VirtualMachine::entered_frame()
   immediates = (object_array)image.ptr(bytecode_slots[VMBS_Immediates]);
 }
 
+void VirtualMachine::execute_primitive(intmax_t index, int argc, oop* argv)
+{
+  if(index > 0 && index < primitive_count)
+  {
+    PrimitiveFunction* fn = primitive_functions.get() + index;
+    if(fn->fn)
+    {
+      int result = fn->fn(*this, argc, argv);
+      (void)result;
+    }
+    else
+    {
+      std::cerr << "primitive not implemented index= " << index << std::endl;
+    }
+  }
+  else
+  {
+    std::cerr << "invalid primitive index= " << index << std::endl;
+  }
+}
+
 VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
 : image(image),
   primitive_count(0), primitive_capacity(64),
@@ -60,7 +81,8 @@ bool VirtualMachine::lookup(oop receiver, oop selector, oop& result) const
   auto vt = oop_vtable(receiver, image);
   string_ref selector_sym = (string_ref)image.ptr(selector);
   std::cout << "** lookup selector='" << selector_sym << "'" << std::endl;
-  if(vt->lookup(image, image.ptr(receiver), selector_sym, result))
+  vtable_slot_flags slot_flags = vts_invalid1;
+  if(vt->lookup(image, image.ptr(receiver), selector_sym, &slot_flags, result))
   {
     return true;
   }
@@ -99,6 +121,30 @@ void VirtualMachine::run(int ticks)
       if(lookup(*(sp-(1+arg)), *(sp-1), result))
       {
         std::cout << "  found oop= " << result << std::endl;
+        vtable_object* vt = oop_vtable(result, image);
+        oop bytecode = vt->bytecode();
+        --sp; // pop the selector
+        oop* argv = sp - arg;
+        if(bytecode)
+        {
+          // activatable method
+          std::cout << "  bytecode= " << bytecode << std::endl;
+          oop* bytecode_slots = (oop*)image.ptr(bytecode);
+          if(bytecode_slots[VMBS_PrimitiveProxyIndex])
+          {
+            // alias method for a primitive
+            std::cout << "  alias for primitive id= " << oop_to_int(bytecode_slots[VMBS_PrimitiveProxyIndex]) << std::endl;
+            execute_primitive(oop_to_int(bytecode_slots[VMBS_PrimitiveProxyIndex]), arg, argv);
+          }
+          else
+          {
+            enter_method(result);
+          }
+        }
+        else
+        {
+          std::cout << "  not a method" << std::endl;
+        }
       }
       else
       {

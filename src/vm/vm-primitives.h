@@ -7,7 +7,7 @@ class VirtualMachine;
 
 struct PrimitiveFunction
 {
-  using function_t = int(*)(VirtualMachine& , int argc, oop* argv);
+  using function_t = int(*)(VirtualMachine& vm, int argc, oop* argv);
 
   function_t fn;
   void* dylib;

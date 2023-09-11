@@ -1,5 +1,16 @@
 #include "lexer.h"
 
+Token::Token()
+: Token(Token::EndOfFile)
+{
+}
+
+Token::Token(Token::Type type)
+: type(type), source_index(0), source_line(0), source_col(0), int_value(0)
+{
+}
+
+
 const char* token_type_to_string(Token::Type type)
 {
   switch(type)
@@ -73,7 +84,7 @@ Token Lexer::next()
 {
   if(index >= input.size())
   {
-    return Token{ .type = Token::EndOfFile };
+    return Token(Token::EndOfFile);
   }
 
   while(is_whitespace())
@@ -81,7 +92,7 @@ Token Lexer::next()
     next_char();
   }
 
-  Token token;
+  Token token(Token::EndOfFile);
   token.source_index = index;
   token.source_line = line;
   token.source_col = col;

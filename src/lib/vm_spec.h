@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <climits>
 
 using vm_instruction_t = uint8_t;
 

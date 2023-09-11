@@ -4,6 +4,8 @@
 #include "vm_spec.h"
 #include "vm-primitives.h"
 
+#include <memory>
+
 class VirtualMachine
 {
   struct ExecutionContext
@@ -41,6 +43,8 @@ protected:
   void enter_method(oop method);
   ExecutionContext* fp() const;
   void entered_frame();
+
+  void execute_primitive(intmax_t index, int, oop*);
 
 public:
   VirtualMachine(Image& image, oop entrypoint_method);

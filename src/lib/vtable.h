@@ -103,7 +103,7 @@ public:
 
   add_slot_result_t add_slot(Image&, const char* slot_name, vtable_slot_flags flags, oop value);
 
-  bool lookup(Image& image, void* instance, string_ref symbol, oop& result) const;
+  bool lookup(Image& image, void* instance, string_ref symbol, vtable_slot_flags* slot_flags, oop& result) const;
   bool recursive_lookup(Image& image, void* instance, string_ref selector, oop& result, oop* owner, vtable_slot_flags* slot_flags) const;
 };
 

@@ -7,7 +7,9 @@
 #include "libfowl.h"
 
 #include <vector>
+#include <memory>
 #include <iterator>
+#include <algorithm>
 
 int main(int, const char**);
 

@@ -10,7 +10,7 @@ struct ImageHeader
   uint32_t region_size_bytes, flags;
   uint64_t next_alloc;
   uint32_t config_size_pairs, config_capacity_pairs;
-  uint32_t config[0][2];
+  uint32_t config[1][2];
 };
 
 enum ImageConfigOption

@@ -21,6 +21,9 @@ struct Token
   std::string_view string;
   std::size_t source_index, source_line, source_col;
   intptr_t int_value;
+
+  Token();
+  Token(Type type);
 };
 
 const char* token_type_to_string(Token::Type type);

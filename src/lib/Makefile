@@ -6,6 +6,8 @@ SONAME := libfowl.so
 SRC := $(wildcard *.cpp)
 OBJ := $(SRC:.cpp=.o)
 
+CXXFLAGS += -fPIC
+
 ALL: $(SONAME) $(LIB)
 .PHONY: debug clean
 

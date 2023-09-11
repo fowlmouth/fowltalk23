@@ -223,7 +223,7 @@ vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const cha
 }
 
 bool vtable_object::lookup(Image& image, void* instance,
-  string_ref selector, oop& result) const
+  string_ref selector, vtable_slot_flags* slot_flags, oop& result) const
 {
   oop symbol_offset = image.offset(selector);
   const unsigned int slot_mask = slot_capacity - 1;
@@ -244,6 +244,11 @@ bool vtable_object::lookup(Image& image, void* instance,
   {
     return false;
   }
+
+  if(slot_flags)
+  {
+    *slot_flags = slot->flags();
+  }
   switch(slot->flags())
   {
   case vts_data:
@@ -262,7 +267,9 @@ bool vtable_object::lookup(Image& image, void* instance,
   } break;
 
   case vts_setter:
-    // TODO
+    result = slot->value();
+    break;
+
   default:
     result = 0;
     break;
