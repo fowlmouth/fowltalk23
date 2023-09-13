@@ -40,7 +40,7 @@ void VirtualMachine::entered_frame()
 
 void VirtualMachine::execute_primitive(intmax_t index, int argc, oop* argv)
 {
-  if(index > 0 && index < primitive_count)
+  if(index >= 0 && index < primitive_capacity)
   {
     PrimitiveFunction* fn = primitive_functions.get() + index;
     if(fn->fn)
@@ -80,7 +80,6 @@ bool VirtualMachine::lookup(oop receiver, oop selector, oop& result) const
 {
   auto vt = oop_vtable(receiver, image);
   string_ref selector_sym = (string_ref)image.ptr(selector);
-  std::cout << "** lookup selector='" << selector_sym << "'" << std::endl;
   vtable_slot_flags slot_flags = vts_invalid1;
   if(vt->lookup(image, image.ptr(receiver), selector_sym, &slot_flags, result))
   {
@@ -169,22 +168,22 @@ void VirtualMachine::run(int ticks)
   }
 }
 
-void VirtualMachine::register_primitive( PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name)
+void VirtualMachine::register_primitive(intmax_t index, PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name)
 {
+  if(index < 0 || index > primitive_capacity)
+  {
+    std::cerr << "invalid primitive index= " << index << std::endl;
+    throw TODO{};
+  }
+  if(primitive_functions[ index ].fn)
+  {
+    std::cerr << "primitive already registered index= " << index << std::endl;
+    throw TODO{};
+  }
+
   oop primitiveMap = image.special_object(soid_primitiveMap);
   vtable_object* primitiveMapVT = oop_vtable(primitiveMap, image);
 
-  int id = primitive_count++;
-  if(id == primitive_capacity)
-  {
-    primitive_capacity *= 2;
-    if(!primitive_capacity)
-      primitive_capacity = 8;
-    auto tmp = std::make_unique< PrimitiveFunction[] >(primitive_capacity);
-    std::copy(primitive_functions.get(), primitive_functions.get() + primitive_count, tmp.get());
-    primitive_functions = std::move(tmp);
-  }
-
-  primitiveMapVT->add_slot(image, selector, vts_static, int_to_oop(id));
-  primitive_functions[id] = {fn, dylib, symbol_name};
+  primitiveMapVT->add_slot(image, selector, vts_static, int_to_oop(index));
+  primitive_functions[ index ] = {fn, dylib, symbol_name};
 }

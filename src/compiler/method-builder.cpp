@@ -1,12 +1,12 @@
 #include "method-builder.h"
 
 MethodBuilder::MethodBuilder(Image& image)
-: parent_(nullptr), image_(&image), stack_size(0), stack_size_max(0)
+: parent_(nullptr), image_(&image), stack_size(0), stack_size_max(0), arity(0)
 {
 }
 
 MethodBuilder::MethodBuilder(MethodBuilder* parent)
-: parent_(parent), image_(nullptr), stack_size(0), stack_size_max(0)
+: parent_(parent), image_(nullptr), stack_size(0), stack_size_max(0), arity(0)
 {
   if(parent_)
   {
@@ -130,4 +130,10 @@ oop MethodBuilder::as_method() const
   auto method = image_->alloc_words(vt, slot_count);
 
   return image_->offset(method);
+}
+
+void MethodBuilder::add_argument(std::string_view selector)
+{
+  ++arity;
+  variable_names.push_back(std::string(selector));
 }

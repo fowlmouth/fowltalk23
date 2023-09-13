@@ -84,14 +84,14 @@ uint32_t next_power_of_two(uint32_t v)
 
 vtable_object* vtable_object::make(std::size_t slot_count, std::size_t static_parent_count, vtable_object* vtable_vt, Memory& mem)
 {
-  uint32_t capacity = next_power_of_two(slot_count);
+  uint32_t capacity = next_power_of_two(slot_count+1);
   if(slot_count > capacity)
   {
     return nullptr;
   }
   std::size_t vtable_size = calculate_vtable_size(capacity, static_parent_count);
   vtable_object* vtable = (vtable_object*)mem.alloc(vtable_vt, vtable_size);
-  vtable->slot_capacity = slot_count;
+  vtable->slot_capacity = capacity;
   vtable->slot_count = 0;
   vtable->static_parent_count = static_parent_count;
   vtable->parent_count = 0;
@@ -141,7 +141,6 @@ void vtable_object::set_bytecode(oop new_bytecode)
 
 vtable_object::add_slot_result_t vtable_object::add_slot(Image& image, const char* slot_name, vtable_slot_flags flags, oop value)
 {
-
   if(slot_count == slot_capacity)
   {
     return asr_error_too_many_slots;

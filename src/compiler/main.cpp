@@ -174,6 +174,7 @@ int main(int argc, const char** argv)
   image.bootstrap();
 
   MethodBuilder method_context(image);
+  method_context.add_argument("lobby");
   MethodParser parser(input_contents, method_context);
   parser.parse_expression();
 

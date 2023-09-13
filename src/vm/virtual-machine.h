@@ -51,6 +51,6 @@ public:
   bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
 
-  void register_primitive( PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name);
+  void register_primitive(intmax_t index, PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name);
 
 };

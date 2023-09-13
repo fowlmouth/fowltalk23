@@ -18,7 +18,7 @@ int prim_Integer_plus_(VirtualMachine& vm, int, oop* argv)
 void load_default_primitives(VirtualMachine& vm)
 {
 #define PRIM(Identifier, Selector) \
-  vm.register_primitive(prim_##Identifier, (Selector), nullptr, "prim_"#Identifier)
+  vm.register_primitive(pid_##Identifier, prim_##Identifier, (Selector), nullptr, "prim_"#Identifier)
 
   PRIM(Object_copy, "_Object_copy");
   PRIM(Integer_plus_, "_Integer_plus:");
