@@ -39,6 +39,11 @@ class VirtualMachine
   oop* sp;
   object_array immediates;
 
+public:
+  enum LogLevel {
+    LL_None, LL_Error, LL_Warn, LL_Info, LL_Debug, LL_Trace
+  } log_level = LL_Warn;
+
 protected:
   void enter_method(oop method);
   ExecutionContext* fp() const;

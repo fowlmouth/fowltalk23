@@ -103,23 +103,35 @@ void VirtualMachine::run(int ticks)
     switch(op)
     {
     case VMI_Halt:
-      std::cout << "[halt]" << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[halt]" << std::endl;
+      }
       return;
 
     case VMI_LoadImmediate:
-      std::cout << "[load_immediate arg=" << arg << " ]" << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[load_immediate arg=" << arg << " ]" << std::endl;
+      }
       *sp++ = immediates[arg];
       break;
 
     case VMI_Send:
     {
-      std::cout << "[send arg=" << arg << " ]" << std::endl;
-      std::cout << "  selector= '" << (string_ref)image.ptr(*(sp-1)) << "'" << std::endl;
-      std::cout << "  receiver oop= " << *(sp-(1+arg)) << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[send arg=" << arg << " ]" << std::endl
+          << "  selector= '" << (string_ref)image.ptr(*(sp-1)) << "'" << std::endl
+          << "  receiver oop= " << *(sp-(1+arg)) << std::endl;
+      }
       oop result;
       if(lookup(*(sp-(1+arg)), *(sp-1), result))
       {
-        std::cout << "  found oop= " << result << std::endl;
+        if(log_level >= LL_Debug)
+        {
+          std::cerr << "  found oop= " << result << std::endl;
+        }
         vtable_object* vt = oop_vtable(result, image);
         oop bytecode = vt->bytecode();
         --sp; // pop the selector
@@ -127,12 +139,18 @@ void VirtualMachine::run(int ticks)
         if(bytecode)
         {
           // activatable method
-          std::cout << "  bytecode= " << bytecode << std::endl;
+          if(log_level >= LL_Debug)
+          {
+            std::cerr << "  bytecode= " << bytecode << std::endl;
+          }
           oop* bytecode_slots = (oop*)image.ptr(bytecode);
           if(bytecode_slots[VMBS_PrimitiveProxyIndex])
           {
             // alias method for a primitive
-            std::cout << "  alias for primitive id= " << oop_to_int(bytecode_slots[VMBS_PrimitiveProxyIndex]) << std::endl;
+            if(log_level >= LL_Debug)
+            {
+              std::cerr << "  alias for primitive id= " << oop_to_int(bytecode_slots[VMBS_PrimitiveProxyIndex]) << std::endl;
+            }
             execute_primitive(oop_to_int(bytecode_slots[VMBS_PrimitiveProxyIndex]), arg, argv);
           }
           else
@@ -142,26 +160,41 @@ void VirtualMachine::run(int ticks)
         }
         else
         {
-          std::cout << "  not a method" << std::endl;
+          if(log_level >= LL_Debug)
+          {
+            std::cerr << "  not a method" << std::endl;
+          }
         }
       }
       else
       {
-        std::cout << "  not found" << std::endl;
+        if(log_level >= LL_Debug)
+        {
+          std::cerr << "  not found" << std::endl;
+        }
       }
       break;
     }
 
     case VMI_Return:
-      std::cout << "[return arg=" << arg << " ]" << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[return arg=" << arg << " ]" << std::endl;
+      }
       break;
 
     case VMI_Extend:
-      std::cout << "[extend arg=" << arg << " ]" << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[extend arg=" << arg << " ]" << std::endl;
+      }
       continue;
 
     default:
-      std::cout << "[invalid opcode=" << op << " ]" << std::endl;
+      if(log_level >= LL_Debug)
+      {
+        std::cerr << "[invalid opcode=" << op << " ]" << std::endl;
+      }
       return;
     }
     arg = 0;
@@ -172,12 +205,16 @@ void VirtualMachine::register_primitive(intmax_t index, PrimitiveFunction::funct
 {
   if(index < 0 || index > primitive_capacity)
   {
-    std::cerr << "invalid primitive index= " << index << std::endl;
+    if(log_level >= LL_Error)
+      std::cerr << "invalid primitive index= " << index << std::endl;
     throw TODO{};
   }
   if(primitive_functions[ index ].fn)
   {
-    std::cerr << "primitive already registered index= " << index << std::endl;
+    if(log_level >= LL_Error)
+    {
+      std::cerr << "primitive already registered index= " << index << std::endl;
+    }
     throw TODO{};
   }
 
