@@ -19,6 +19,7 @@ class CLI
 public:
   CLI& on(const char* arg, std::function< void(std::string_view) >);
   CLI& on(const char* arg, std::function< void() >);
+  CLI& on(const char* arg, bool& flag_present);
 
   CLI& on_argument(std::function< void(std::string_view) >);
 
