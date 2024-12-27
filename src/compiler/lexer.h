@@ -11,10 +11,16 @@ struct Token
     Operator,
     Integer,
     String,
+    Assignment,
     OpenParen,
     CloseParen,
 
     __count
+  };
+
+  struct Position
+  {
+    std::size_t source_index, source_line, source_col;
   };
 
   Type type;
@@ -46,4 +52,5 @@ public:
   Lexer(std::string_view input);
 
   Token next();
+  void reset_position(std::size_t index, std::size_t line, std::size_t col);
 };

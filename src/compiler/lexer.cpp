@@ -130,6 +130,17 @@ Token Lexer::next()
     next_char();
     break;
 
+  case ':':
+    next_char();
+    if(current() == '=')
+    {
+      token.type = Token::Assignment;
+      next_char();
+      break;
+    }
+    token.type = Token::EndOfFile;
+    break;
+
   default:
     if(is_identifier_start())
     {
@@ -150,4 +161,9 @@ Token Lexer::next()
   return token;
 }
 
-
+void Lexer::reset_position(std::size_t index, std::size_t line, std::size_t col)
+{
+  this->index = index;
+  this->line = line;
+  this->col = col;
+}

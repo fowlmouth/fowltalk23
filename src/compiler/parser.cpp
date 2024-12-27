@@ -20,11 +20,27 @@ Token::Type Parser::current_type() const
   return tok.type;
 }
 
+bool Parser::current_type(Token::Type type) const
+{
+  return tok.type == type;
+}
+
 void Parser::report_error(std::string message)
 {
   std::cerr << "Parser error '" << message
     << "' line= " << tok.source_line
     << " column= " << tok.source_col << std::endl;
+}
+
+Token::Position Parser::save_position() const
+{
+  return {tok.source_index, tok.source_line, tok.source_col};
+}
+
+void Parser::restore_position(Token::Position position)
+{
+  lexer.reset_position(position.source_index, position.source_line, position.source_col);
+  next();
 }
 
 #define CHECK_CALLBACK(callback) \
@@ -114,6 +130,20 @@ bool Parser::parse_method_definition()
 
 bool Parser::parse_assignment()
 {
+  if(current_type(Token::Identifier))
+  {
+    auto position = save_position();
+    auto dest = tok;
+    next();
+    if(current_type(Token::Assignment))
+    {
+      next();
+      EXPECT(parse_expression, "expression");
+      CHECK_CALLBACK(accept_assignment(dest.string));
+      return true;
+    }
+    restore_position(position);
+  }
   return false;
 }
 

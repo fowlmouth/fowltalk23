@@ -119,6 +119,17 @@ int main(int argc, const char** argv)
     .on("--size", [&](std::string_view arg){
       image_size = arg;
     })
+    .on("--help", [&argv](){
+      std::cout << "usage: " << argv[0] << " [options] [--] [file]" << std::endl
+        << "  --debug-lexer" << std::endl
+        << "  --debug-parser" << std::endl
+        << "  --debug-compiler" << std::endl
+        << "  --file [path]" << std::endl
+        << "  --input [string]" << std::endl
+        << "  --output [path]" << std::endl
+        << "  --size [size]" << std::endl
+        << "  --help" << std::endl;
+    })
     .on_argument([&](std::string_view arg){
       input_path = arg;
     })
