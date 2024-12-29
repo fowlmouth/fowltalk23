@@ -12,5 +12,5 @@ public:
 protected:
   bool accept_integer(intmax_t value) override;
   bool accept_send(std::string_view selector, int arity) override;
-
+  bool accept_assignment(std::string_view name) override;
 };

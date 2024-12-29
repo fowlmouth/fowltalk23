@@ -75,6 +75,11 @@ bool Parser::parse_terminal()
     next();
     return true;
 
+  case Token::Identifier:
+    CHECK_CALLBACK(accept_send(tok.string, 0));
+    next();
+    return true;
+
   case Token::OpenParen:
     next();
     EXPECT(parse_expression, "expression");
@@ -105,13 +110,12 @@ bool Parser::parse_infix()
 {
   if(parse_unary())
   {
-    if(current_type() == Token::Operator)
+    while(current_type() == Token::Operator)
     {
       Token op = tok;
       next();
       EXPECT(parse_unary, "unary expression");
       CHECK_CALLBACK(accept_send(op.string, 2));
-      return true;
     }
     return true;
   }
@@ -158,6 +162,11 @@ bool Parser::parse_document()
   while(parse_statement())
   {
     res = true;
+    if(!current_type(Token::Period))
+    {
+      break;
+    }
+    next();
   }
   return res;
 }

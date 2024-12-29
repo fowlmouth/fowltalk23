@@ -12,6 +12,7 @@ struct Token
     Integer,
     String,
     Assignment,
+    Period,
     OpenParen,
     CloseParen,
 

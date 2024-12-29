@@ -20,6 +20,8 @@ const char* token_type_to_string(Token::Type type)
   case Token::Operator: return "Operator";
   case Token::Integer: return "Integer";
   case Token::String: return "String";
+  case Token::Assignment: return "Assignment";
+  case Token::Period: return "Period";
   case Token::OpenParen: return "OpenParen";
   case Token::CloseParen: return "CloseParen";
   default: return "???";
@@ -139,6 +141,11 @@ Token Lexer::next()
       break;
     }
     token.type = Token::EndOfFile;
+    break;
+
+  case '.':
+    next_char();
+    token.type = Token::Period;
     break;
 
   default:

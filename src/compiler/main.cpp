@@ -26,6 +26,7 @@ public:
 protected:
   bool accept_integer(intmax_t value) override;
   bool accept_send(std::string_view selector, int arity) override;
+  bool accept_assignment(std::string_view name) override;
 };
 
 EventPrinter::EventPrinter(std::string_view input, std::ostream& stream)
@@ -42,6 +43,12 @@ bool EventPrinter::accept_integer(intmax_t number)
 bool EventPrinter::accept_send(std::string_view selector, int arity)
 {
   stream << "accept_send selector= '" << selector << "'  arity= " << arity << std::endl;
+  return true;
+}
+
+bool EventPrinter::accept_assignment(std::string_view name)
+{
+  stream << "accept_assignment name= '" << name << "'" << std::endl;
   return true;
 }
 
@@ -187,7 +194,7 @@ int main(int argc, const char** argv)
   MethodBuilder method_context(image);
   method_context.add_argument("lobby");
   MethodParser parser(input_contents, method_context);
-  parser.parse_expression();
+  parser.parse_document();
 
   if(compiler_debug)
   {

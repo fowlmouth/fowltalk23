@@ -16,3 +16,9 @@ bool MethodParser::accept_send(std::string_view selector, int arity)
   builder_->send_message(selector, arity);
   return true;
 }
+
+bool MethodParser::accept_assignment(std::string_view name)
+{
+  (void)name;
+  return true;
+}
