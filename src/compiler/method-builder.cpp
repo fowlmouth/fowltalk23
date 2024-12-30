@@ -46,6 +46,9 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
   {
   case VMI_Halt:
     break;
+  case VMI_SetLocal:
+    --stack_size;
+    break;
   case VMI_LoadImmediate:
     ++stack_size;
     break;
@@ -53,7 +56,6 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
     // --stack_size; // for the selector
     stack_size -= arg;
     // ++stack_size; // for the result
-    // ^ commented out because they cancel each other out
     break;
 
   default:
@@ -99,6 +101,32 @@ void MethodBuilder::send_message(std::string_view selector, int arg_count)
   int selector_index = intern(selector_copy.get());
   write_instruction(VMI_LoadImmediate, selector_index);
   write_instruction(VMI_Send, arg_count);
+}
+
+void MethodBuilder::set_local(int index)
+{
+  write_instruction(VMI_SetLocal, index);
+}
+
+int MethodBuilder::declare_variable(std::string name)
+{
+  auto iter = std::find(variable_names.begin(), variable_names.end(), name);
+  if(iter == variable_names.end())
+  {
+    variable_names.push_back(name);
+    return variable_names.size() - 1;
+  }
+  return -1;
+}
+
+int MethodBuilder::lookup_variable(std::string name)
+{
+  auto iter = std::find(variable_names.begin(), variable_names.end(), name);
+  if(iter == variable_names.end())
+  {
+    return -1;
+  }
+  return std::distance(variable_names.begin(), iter);
 }
 
 oop MethodBuilder::as_method() const

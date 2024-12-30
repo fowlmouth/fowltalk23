@@ -184,7 +184,7 @@ int main(int argc, const char** argv)
   if(parser_debug)
   {
     EventPrinter p(input_contents, std::cout);
-    p.parse_expression();
+    p.parse_document();
   }
 
   std::size_t image_size_num = interpret_image_size(image_size, 1 << 20);

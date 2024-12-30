@@ -19,6 +19,12 @@ bool MethodParser::accept_send(std::string_view selector, int arity)
 
 bool MethodParser::accept_assignment(std::string_view name)
 {
-  (void)name;
+  std::string string_name = std::string(name);
+  int index = builder_->declare_variable(string_name);
+  if(index == -1)
+  {
+    index = builder_->lookup_variable(string_name);
+  }
+  builder_->set_local(index);
   return true;
 }

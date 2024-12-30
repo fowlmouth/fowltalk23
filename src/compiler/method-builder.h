@@ -43,8 +43,15 @@ public:
 
   void load_immediate_integer(intmax_t value);
   void send_message(std::string_view selector, int arg_count);
+  void set_local(int index);
 
   void add_argument(std::string_view selector);
+
+  // returns the index or -1 if the variable was already declared
+  int declare_variable(std::string name);
+
+  // returns the index or -1 if the variable was not found
+  int lookup_variable(std::string name);
 
   oop as_method() const;
 };
