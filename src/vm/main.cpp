@@ -28,7 +28,16 @@ int main(int argc, const char** argv)
       else if(!strncasecmp("trace", value.data(), 5))
         log_level = VirtualMachine::LL_Trace;
       else
+      {
+        std::cerr << "Valid log levels: error, warn, info, debug, trace" << std::endl;
         log_level = VirtualMachine::LL_Debug;
+      }
+    })
+    .on("--help", [&](){
+      std::cout << "usage: " << argv[0] << " [options] [--] [image]" << std::endl
+        << "  --image [path]" << std::endl
+        << "  --log-level [level]" << std::endl
+        << "  --help" << std::endl;
     })
     .on_argument([&](std::string_view value){
       image_path = value;

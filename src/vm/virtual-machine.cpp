@@ -103,14 +103,14 @@ void VirtualMachine::run(int ticks)
     switch(op)
     {
     case VMI_Halt:
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[halt]" << std::endl;
       }
       return;
 
     case VMI_LoadImmediate:
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[load_immediate arg=" << arg << " ]" << std::endl;
       }
@@ -119,7 +119,7 @@ void VirtualMachine::run(int ticks)
 
     case VMI_Send:
     {
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[send arg=" << arg << " ]" << std::endl
           << "  selector= '" << (string_ref)image.ptr(*(sp-1)) << "'" << std::endl
@@ -177,21 +177,28 @@ void VirtualMachine::run(int ticks)
     }
 
     case VMI_Return:
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[return arg=" << arg << " ]" << std::endl;
       }
       break;
 
     case VMI_Extend:
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[extend arg=" << arg << " ]" << std::endl;
       }
       continue;
 
+    case VMI_SetLocal:
+      if(log_level >= LL_Trace)
+      {
+        std::cerr << "[set_local arg=" << arg << " ]" << std::endl;
+      }
+      break;
+
     default:
-      if(log_level >= LL_Debug)
+      if(log_level >= LL_Trace)
       {
         std::cerr << "[invalid opcode=" << op << " ]" << std::endl;
       }
