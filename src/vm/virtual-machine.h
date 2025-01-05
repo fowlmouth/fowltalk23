@@ -64,7 +64,7 @@ protected:
   void execute_primitive(intmax_t index, int, oop*);
 
 public:
-  VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method);
+  VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method, oop lobby_value = oop(0));
   bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
 

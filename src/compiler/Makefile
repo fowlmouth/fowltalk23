@@ -2,10 +2,11 @@ include ../../config.mk
 
 BIN := compiler
 
-SRC := $(wildcard *.cpp)
+SRC := $(wildcard *.cpp) $(filter-out ../vm/main.cpp,$(wildcard ../vm/*.cpp))
 OBJ := $(SRC:.cpp=.o)
 
-CXXFLAGS += -I../lib -g -O0
+CXXFLAGS += -I../lib -I../vm
+CXXFLAGS += -g -O0 -DDEBUG
 LDLIBS := -L../lib -lfowl
 
 ALL: $(BIN)

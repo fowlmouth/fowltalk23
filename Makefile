@@ -27,6 +27,11 @@ test.img: compiler libfowl.so
 clean:
 	rm -f vm libfowl.so compiler test.img
 
+debug:
+	$(MAKE) -C src/lib debug
+	$(MAKE) -C src/compiler
+	$(MAKE) compiler
+
 cleanall: clean
 	$(MAKE) -C src/vm clean
 	$(MAKE) -C src/lib clean

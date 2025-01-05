@@ -51,15 +51,6 @@ PRIM(Integer_print)
   return 0;
 }
 
-void load_default_primitives(VirtualMachine& vm)
-{
-#define REG(Identifier, Selector) \
-  vm.register_primitive(pid_##Identifier, prim_##Identifier, (Selector), nullptr, "prim_"#Identifier)
-
-  REG(Object_copy, "_Object_copy");
-  REG(Integer_plus_, "_Integer_plus:");
-  REG(Integer_print, "_Integer_print");
-}
 
 PrimitiveFunctionSet::PrimitiveFunctionSet(int capacity)
 : primitive_count(0), primitive_capacity(capacity)
@@ -103,4 +94,14 @@ const PrimitiveFunction* PrimitiveFunctionSet::get(primitive_id_t pid) const
     throw TODO{};
   }
   return &primitive_functions[ index ];
+}
+
+void PrimitiveFunctionSet::load_defaults(Image& image)
+{
+#define REG(Identifier, Selector) \
+  register_primitive(image, pid_##Identifier, prim_##Identifier, (Selector), nullptr, "prim_"#Identifier)
+
+  REG(Object_copy, "_Object_copy");
+  REG(Integer_plus_, "_Integer_plus:");
+  REG(Integer_print, "_Integer_print");
 }

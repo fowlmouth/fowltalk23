@@ -58,9 +58,10 @@ int main(int argc, const char** argv)
   }
 
   PrimitiveFunctionSet primitives(32);
+  primitives.load_defaults(im);
+
   VirtualMachine vm(im, primitives, entrypoint);
   vm.log_level = log_level;
-  load_default_primitives(vm);
   vm.run();
 
   return 0;

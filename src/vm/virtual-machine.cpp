@@ -82,7 +82,7 @@ void VirtualMachine::execute_primitive(intmax_t index, int argc, oop* argv)
   }
 }
 
-VirtualMachine::VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method)
+VirtualMachine::VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method, oop lobby_value)
 : image(image),
   primitives(primitives),
   frame_ptr(0), frame_capacity(64),
@@ -92,8 +92,10 @@ VirtualMachine::VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, o
   ip(nullptr), immediates(nullptr)
 {
   sp = stack.get();
+  *sp++ = lobby_value;
   auto fr = fp();
-  fr->sp = fr->ip = fr->locals_begin = 0;
+  fr->ip = fr->locals_begin = 0;
+  fr->sp = 1;
   fr->method = entrypoint_method;
   entered_frame();
 }

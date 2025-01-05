@@ -18,8 +18,6 @@ struct PrimitiveFunction
   const char* symbol_name = nullptr;
 };
 
-void load_default_primitives(VirtualMachine& vm);
-
 class PrimitiveFunctionSet
 {
   int primitive_count, primitive_capacity;
@@ -30,4 +28,6 @@ public:
 
   void register_primitive(Image& image, primitive_id_t pid, PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name);
   const PrimitiveFunction* get(primitive_id_t pid) const;
+
+  void load_defaults(Image& image);
 };

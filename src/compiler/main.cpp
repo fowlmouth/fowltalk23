@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "cli.h"
 #include "method-parser.h"
+#include "virtual-machine.h"
 
 #include <iostream>
 
@@ -105,10 +106,11 @@ std::size_t interpret_image_size(const std::string& str, std::size_t default_val
 int main(int argc, const char** argv)
 {
   bool lexer_debug = false, parser_debug = false,
-    compiler_debug = false;
+    compiler_debug = false, execute_code = false;
   std::string input_path, output_path;
   std::string_view input_contents;
   std::string image_size = "1m";
+  VirtualMachine::LogLevel log_level = VirtualMachine::LL_Warn;
 
   CLI cli;
   cli
@@ -120,6 +122,26 @@ int main(int argc, const char** argv)
     })
     .on("--debug-compiler", [&](){
       compiler_debug = true;
+    })
+    .on("--run", [&](){
+      execute_code = true;
+    })
+    .on("--log-level", [&](std::string_view value){
+      if(!strncasecmp("error", value.data(), 5))
+        log_level = VirtualMachine::LL_Error;
+      else if(!strncasecmp("warn", value.data(), 4))
+        log_level = VirtualMachine::LL_Warn;
+      else if(!strncasecmp("info", value.data(), 4))
+        log_level = VirtualMachine::LL_Info;
+      else if(!strncasecmp("debug", value.data(), 5))
+        log_level = VirtualMachine::LL_Debug;
+      else if(!strncasecmp("trace", value.data(), 5))
+        log_level = VirtualMachine::LL_Trace;
+      else
+      {
+        std::cerr << "Valid log levels: error, warn, info, debug, trace" << std::endl;
+        log_level = VirtualMachine::LL_Debug;
+      }
     })
     .on("--file", [&](std::string_view arg){
       input_path = arg;
@@ -138,6 +160,7 @@ int main(int argc, const char** argv)
         << "  --debug-lexer" << std::endl
         << "  --debug-parser" << std::endl
         << "  --debug-compiler" << std::endl
+        << "  --run" << std::endl
         << "  --file [path]" << std::endl
         << "  --input [string]" << std::endl
         << "  --output [path]" << std::endl
@@ -230,6 +253,16 @@ int main(int argc, const char** argv)
   if(method)
   {
     image.add_entrypoint(method);
+  }
+
+  if(execute_code)
+  {
+    PrimitiveFunctionSet primitives(32);
+    primitives.load_defaults(image);
+
+    VirtualMachine vm(image, primitives, method, oop(0));
+    vm.log_level = log_level;
+    vm.run();
   }
 
   if(mmap_data)
