@@ -1,8 +1,31 @@
 #include "virtual-machine.h"
 
+VMPrimitiveInterface::VMPrimitiveInterface(VirtualMachine& vm)
+: vm(vm)
+{
+}
+
+void VMPrimitiveInterface::pop(std::size_t count)
+{
+  if(vm.log_level >= VirtualMachine::LL_Trace)
+  {
+    std::cerr << "[primitive pop count= " << count << ']' << std::endl;
+  }
+  vm.sp -= count;
+}
+
+void VMPrimitiveInterface::push(oop value)
+{
+  if(vm.log_level >= VirtualMachine::LL_Trace)
+  {
+    std::cerr << "[primitive push value= " << value << ']' << std::endl;
+  }
+  *vm.sp++ = value;
+}
+
+
 void VirtualMachine::enter_method(oop method)
 {
-  (void)method;
   // write locals to the current frame
   auto fr = fp();
   object_array bytecode_slots = fr->bytecode_slots(image);
@@ -19,7 +42,7 @@ void VirtualMachine::enter_method(oop method)
   fr = fp();
   fr->method = method;
   fr->ip = 0;
-  fr->sp = sp - stack.get();
+  fr->sp = fr->locals_begin = sp - stack.get();
 
   entered_frame();
 }
@@ -40,12 +63,12 @@ void VirtualMachine::entered_frame()
 
 void VirtualMachine::execute_primitive(intmax_t index, int argc, oop* argv)
 {
-  if(index >= 0 && index < primitive_capacity)
+  if(auto prim = primitives.get((primitive_id_t)index))
   {
-    PrimitiveFunction* fn = primitive_functions.get() + index;
-    if(fn->fn)
+    if(prim->fn)
     {
-      int result = fn->fn(*this, argc, argv);
+      VMPrimitiveInterface iface(*this);
+      int result = prim->fn(iface, argc, argv);
       (void)result;
     }
     else
@@ -59,10 +82,9 @@ void VirtualMachine::execute_primitive(intmax_t index, int argc, oop* argv)
   }
 }
 
-VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
+VirtualMachine::VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method)
 : image(image),
-  primitive_count(0), primitive_capacity(64),
-  primitive_functions(std::make_unique< PrimitiveFunction[] >(64)),
+  primitives(primitives),
   frame_ptr(0), frame_capacity(64),
   frames(std::make_unique< ExecutionContext[] >(64)),
   stack_capacity(128),
@@ -71,7 +93,7 @@ VirtualMachine::VirtualMachine(Image& image, oop entrypoint_method)
 {
   sp = stack.get();
   auto fr = fp();
-  fr->sp = fr->ip = 0;
+  fr->sp = fr->ip = fr->locals_begin = 0;
   fr->method = entrypoint_method;
   entered_frame();
 }
@@ -170,7 +192,7 @@ void VirtualMachine::run(int ticks)
       {
         if(log_level >= LL_Debug)
         {
-          std::cerr << "  not found" << std::endl;
+          std::cerr << "  not found selector='" << (string_ref)image.ptr(*(sp-1)) << '"' << std::endl;
         }
       }
       break;
@@ -195,6 +217,15 @@ void VirtualMachine::run(int ticks)
       {
         std::cerr << "[set_local arg=" << arg << " ]" << std::endl;
       }
+      stack[fp()->locals_begin + arg] = *--sp;
+      break;
+
+    case VMI_LoadLocal:
+      if(log_level >= LL_Trace)
+      {
+        std::cerr << "[load_local arg=" << arg << " ]" << std::endl;
+      }
+      *sp++ = stack[fp()->locals_begin + arg];
       break;
 
     default:
@@ -208,26 +239,8 @@ void VirtualMachine::run(int ticks)
   }
 }
 
-void VirtualMachine::register_primitive(intmax_t index, PrimitiveFunction::function_t fn, const char* selector, void* dylib, const char* symbol_name)
+void VirtualMachine::register_primitive(intmax_t index, PrimitiveFunction::function_t fn,
+    const char* selector, void* dylib, const char* symbol_name)
 {
-  if(index < 0 || index > primitive_capacity)
-  {
-    if(log_level >= LL_Error)
-      std::cerr << "invalid primitive index= " << index << std::endl;
-    throw TODO{};
-  }
-  if(primitive_functions[ index ].fn)
-  {
-    if(log_level >= LL_Error)
-    {
-      std::cerr << "primitive already registered index= " << index << std::endl;
-    }
-    throw TODO{};
-  }
-
-  oop primitiveMap = image.special_object(soid_primitiveMap);
-  vtable_object* primitiveMapVT = oop_vtable(primitiveMap, image);
-
-  primitiveMapVT->add_slot(image, selector, vts_static, int_to_oop(index));
-  primitive_functions[ index ] = {fn, dylib, symbol_name};
+  primitives.register_primitive(image, (primitive_id_t)index, fn, selector, dylib, symbol_name);
 }

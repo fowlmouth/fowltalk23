@@ -5,3 +5,4 @@
 /vm
 /src/compiler/compiler
 /compiler
+*.img

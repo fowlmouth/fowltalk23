@@ -298,6 +298,9 @@ void Image::bootstrap()
   {
     void* integer_plus_ = make_prim_method(pid_Integer_plus_);
     add_slot(integer_vt, "+", vts_static, offset(integer_plus_));
+
+    void* integer_print = make_prim_method(pid_Integer_print);
+    add_slot(integer_vt, "print", vts_static, offset(integer_print));
   }
 }
 

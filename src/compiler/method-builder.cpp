@@ -50,6 +50,7 @@ void MethodBuilder::write_instruction(VMInstruction instruction, intmax_t arg)
     --stack_size;
     break;
   case VMI_LoadImmediate:
+  case VMI_LoadLocal:
     ++stack_size;
     break;
   case VMI_Send:
@@ -106,6 +107,11 @@ void MethodBuilder::send_message(std::string_view selector, int arg_count)
 void MethodBuilder::set_local(int index)
 {
   write_instruction(VMI_SetLocal, index);
+}
+
+void MethodBuilder::load_local(int index)
+{
+  write_instruction(VMI_LoadLocal, index);
 }
 
 int MethodBuilder::declare_variable(std::string name)

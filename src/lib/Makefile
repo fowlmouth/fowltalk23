@@ -12,7 +12,7 @@ ALL: $(SONAME) $(LIB)
 .PHONY: debug clean
 
 debug: CXXFLAGS += -DDEBUG -g -O0
-debug: $(SONAME)
+debug: $(SONAME) $(LIB)
 
 $(SONAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -o $@ $^ $(LDLIBS)

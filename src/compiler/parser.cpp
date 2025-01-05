@@ -1,12 +1,17 @@
 #include "parser.h"
 
-Parser::Parser(std::string_view input)
+Parser::Parser(std::string_view input, std::unique_ptr<ParserActions> first_actions)
 : lexer(input)
 {
   next();
+  push_actions(std::move(first_actions));
 }
 
-Parser::~Parser()
+ParserInterface::~ParserInterface()
+{
+}
+
+ParserActions::~ParserActions()
 {
 }
 
@@ -43,6 +48,22 @@ void Parser::restore_position(Token::Position position)
   next();
 }
 
+void Parser::push_actions(std::unique_ptr<ParserActions> actions)
+{
+  actions->interface = this;
+  this->actions.push(std::move(actions));
+}
+
+void Parser::pop_actions()
+{
+  actions.pop();
+}
+
+ParserActions* Parser::top_action() const
+{
+  return actions.top().get();
+}
+
 #define CHECK_CALLBACK(callback) \
   do{ \
     if(!(callback)) \
@@ -71,12 +92,12 @@ bool Parser::parse_terminal()
   switch(current_type())
   {
   case Token::Integer:
-    CHECK_CALLBACK(accept_integer(tok.int_value));
+    CHECK_CALLBACK(top_action()->accept_integer(tok.int_value));
     next();
     return true;
 
   case Token::Identifier:
-    CHECK_CALLBACK(accept_send(tok.string, 0));
+    CHECK_CALLBACK(top_action()->accept_identifier(tok.string));
     next();
     return true;
 
@@ -98,7 +119,7 @@ bool Parser::parse_unary()
   {
     while(current_type() == Token::Identifier)
     {
-      CHECK_CALLBACK(accept_send(tok.string, 1));
+      CHECK_CALLBACK(top_action()->accept_send(tok.string, 1));
       next();
     }
     return true;
@@ -115,7 +136,7 @@ bool Parser::parse_infix()
       Token op = tok;
       next();
       EXPECT(parse_unary, "unary expression");
-      CHECK_CALLBACK(accept_send(op.string, 2));
+      CHECK_CALLBACK(top_action()->accept_send(op.string, 2));
     }
     return true;
   }
@@ -143,7 +164,7 @@ bool Parser::parse_assignment()
     {
       next();
       EXPECT(parse_expression, "expression");
-      CHECK_CALLBACK(accept_assignment(dest.string));
+      CHECK_CALLBACK(top_action()->accept_assignment(dest.string));
       return true;
     }
     restore_position(position);

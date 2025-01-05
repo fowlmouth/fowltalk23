@@ -14,7 +14,7 @@ LDLIBS := -L../lib -lfowl
 ALL: $(BIN)
 .PHONY: debug clean
 
-debug: CXXFLAGS += -g -O0
+debug: CXXFLAGS += -g -O0 -DDEBUG
 debug: $(BIN)
 
 $(BIN): $(OBJ) ../lib/libfowl.so

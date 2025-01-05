@@ -7,7 +7,7 @@ using vm_instruction_t = uint8_t;
 
 enum VMInstruction
 {
-  VMI_Halt, VMI_LoadImmediate, VMI_SetLocal, VMI_Send, VMI_Return, VMI_Extend,
+  VMI_Halt, VMI_LoadImmediate, VMI_SetLocal, VMI_LoadLocal, VMI_Send, VMI_Return, VMI_Extend,
 
   VMI__count,
   VMI__bits = 3,

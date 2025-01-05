@@ -6,12 +6,26 @@
 
 #include <memory>
 
+class VMPrimitiveInterface
+{
+  VirtualMachine& vm;
+
+public:
+  VMPrimitiveInterface(VirtualMachine& vm);
+
+  void pop(std::size_t count);
+  void push(oop value);
+  void ret(oop value);
+};
+
 class VirtualMachine
 {
+  friend class VMPrimitiveInterface;
+
   struct ExecutionContext
   {
     int lexical_parent, sp;
-    int ip;
+    int ip, locals_begin;
     oop method;
 
     ExecutionContext()
@@ -25,9 +39,7 @@ class VirtualMachine
   };
 
   Image& image;
-
-  int primitive_count, primitive_capacity;
-  std::unique_ptr< PrimitiveFunction[] > primitive_functions;
+  PrimitiveFunctionSet& primitives;
 
   int frame_ptr, frame_capacity;
   std::unique_ptr< ExecutionContext[] > frames;
@@ -52,7 +64,7 @@ protected:
   void execute_primitive(intmax_t index, int, oop*);
 
 public:
-  VirtualMachine(Image& image, oop entrypoint_method);
+  VirtualMachine(Image& image, PrimitiveFunctionSet& primitives, oop entrypoint_method);
   bool lookup(oop receiver, oop selector, oop& result) const;
   void run(int ticks = 1024);
 

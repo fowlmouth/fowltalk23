@@ -16,27 +16,34 @@
 
 
 
-class EventPrinter : public Parser
+class EventPrinter : public ParserActions
 {
   std::ostream& stream;
 
 public:
-  EventPrinter(std::string_view input, std::ostream& stream);
+  EventPrinter(std::ostream& stream);
 
 protected:
   bool accept_integer(intmax_t value) override;
+  bool accept_identifier(std::string_view name) override;
   bool accept_send(std::string_view selector, int arity) override;
   bool accept_assignment(std::string_view name) override;
 };
 
-EventPrinter::EventPrinter(std::string_view input, std::ostream& stream)
-: Parser(input), stream(stream)
+EventPrinter::EventPrinter(std::ostream& stream)
+: stream(stream)
 {
 }
 
 bool EventPrinter::accept_integer(intmax_t number)
 {
   stream << "accept_integer number= " << number << std::endl;
+  return true;
+}
+
+bool EventPrinter::accept_identifier(std::string_view name)
+{
+  stream << "accept_identifier name= '" << name << "'" << std::endl;
   return true;
 }
 
@@ -183,7 +190,7 @@ int main(int argc, const char** argv)
 
   if(parser_debug)
   {
-    EventPrinter p(input_contents, std::cout);
+    Parser p(input_contents, std::make_unique<EventPrinter>(std::cout));
     p.parse_document();
   }
 
@@ -193,7 +200,7 @@ int main(int argc, const char** argv)
 
   MethodBuilder method_context(image);
   method_context.add_argument("lobby");
-  MethodParser parser(input_contents, method_context);
+  Parser parser(input_contents, std::make_unique<MethodParser>(method_context));
   parser.parse_document();
 
   if(compiler_debug)

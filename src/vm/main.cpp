@@ -57,7 +57,8 @@ int main(int argc, const char** argv)
     std::cerr << "entrypoint= " << entrypoint << std::endl;
   }
 
-  VirtualMachine vm(im, entrypoint);
+  PrimitiveFunctionSet primitives(32);
+  VirtualMachine vm(im, primitives, entrypoint);
   vm.log_level = log_level;
   load_default_primitives(vm);
   vm.run();
