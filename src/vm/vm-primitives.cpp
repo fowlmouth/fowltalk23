@@ -12,23 +12,50 @@ PRIM(Object_copy)
   return 0;
 }
 
+#define INT_CHECK \
+  if(argc != 2) \
+  { \
+    return -1; \
+  } \
+  oop a = argv[0], b = argv[1]; \
+  if(!oop_is_int(a) || !oop_is_int(b)) \
+  { \
+    vm.pop(1); \
+    return -1; \
+  }
+
 PRIM(Integer_plus_)
 {
-  (void)vm;
-  (void)argc;
-  (void)argv;
-  if(argc != 2)
-  {
-    return -1;
-  }
-  oop a = argv[0], b = argv[1];
-  vm.pop(2);
-  if(!oop_is_int(a) || !oop_is_int(b))
-  {
-    vm.push(oop(0));
-    return -1;
-  }
+  INT_CHECK;
   oop result = int_to_oop(oop_to_int(a) + oop_to_int(b));
+  vm.pop(2);
+  vm.push(result);
+  return 0;
+}
+
+PRIM(Integer_minus_)
+{
+  INT_CHECK;
+  oop result = int_to_oop(oop_to_int(a) - oop_to_int(b));
+  vm.pop(2);
+  vm.push(result);
+  return 0;
+}
+
+PRIM(Integer_multiply_)
+{
+  INT_CHECK;
+  oop result = int_to_oop(oop_to_int(a) * oop_to_int(b));
+  vm.pop(2);
+  vm.push(result);
+  return 0;
+}
+
+PRIM(Integer_divide_)
+{
+  INT_CHECK;
+  oop result = int_to_oop(oop_to_int(a) / oop_to_int(b));
+  vm.pop(2);
   vm.push(result);
   return 0;
 }
@@ -103,5 +130,8 @@ void PrimitiveFunctionSet::load_defaults(Image& image)
 
   REG(Object_copy, "_Object_copy");
   REG(Integer_plus_, "_Integer_plus:");
+  REG(Integer_minus_, "_Integer_minus:");
+  REG(Integer_multiply_, "_Integer_multiply:");
+  REG(Integer_divide_, "_Integer_divide:");
   REG(Integer_print, "_Integer_print");
 }
