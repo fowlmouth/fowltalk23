@@ -7,3 +7,4 @@
 /compiler
 *.img
 /test/compiler/compiler-tests
+/test/vm/vm-tests
