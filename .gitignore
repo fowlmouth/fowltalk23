@@ -6,3 +6,4 @@
 /src/compiler/compiler
 /compiler
 *.img
+/test/compiler/compiler-tests
